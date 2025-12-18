@@ -1,0 +1,41 @@
+
+:root {
+  --color-sun: #F7D774;       /* Jaune doux pour le soleil */
+  --color-lavender: #7B4B94;  /* Violet lavande */
+  --color-olive: #6B8E23;     /* Vert olive */
+  --color-terra: #C1440E;     /* Rouge terre cuite */
+  --color-bg: #FFF8F0;        /* Fond crème */
+}
+
+body {
+  font-family: 'Segoe UI', sans-serif;
+  background-color: var(--color-bg);
+  color: #333;
+  font-size: 18px; /* Lisible pour seniors */
+  line-height: 1.6;
+}
+
+h1, h2, h3, h4 {
+  color: var(--color-lavender);
+  font-weight: bold;
+}
+
+a {
+  color: var(--color-terra);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+button {
+  font-size: 18px;
+  padding: 10px 16px;
+  border-radius: 6px;
+  transition: background 0.3s ease;
+}
+
+button:hover {
+  background-color: var(--color-sun);
+}
