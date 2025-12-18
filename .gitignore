@@ -1,20 +1,18 @@
 <<<<<<< HEAD
 # ---- Backend Python ----
 # Environnements virtuels
-./backend/venv/
-./backend/.env
+backend/venv/
+backend/.env
+*.env
 
-# Fichiers compilés Python
-
-# Packages et distributions
+# --- Caches Python ---
+__pycache__/
 
 # Logs et caches
 *.log
 
 # ---- Frontend Node ----
 frontend/node_modules/
-
-# Build output
 
 # ---- IDE / OS ----
 .vscode/
