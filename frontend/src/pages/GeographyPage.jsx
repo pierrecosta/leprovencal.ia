@@ -1,4 +1,3 @@
-
 export default function GeographyPage() {
   const iframes = [
     "https://gallica.bnf.fr/ark:/12148/btv1b8596846d/f1.item.mini",
@@ -18,8 +17,9 @@ export default function GeographyPage() {
           <iframe
             src={src}
             title={`Carte historique ${i + 1}`}
-            className="w-full h-[320px] md:h-[400px]"
-            style={{ border: 'none' }}
+            loading="lazy"
+            referrerPolicy="no-referrer"
+            className="w-full h-[320px] md:h-[400px] border-0"
           />
           <div className="p-2 text-center bg-[var(--color-bg)] text-[var(--color-lavender)] font-semibold">
             Carte {i + 1} — Provence historique

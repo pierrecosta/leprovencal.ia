@@ -1,10 +1,39 @@
 // hooks/useAuth.js
 import { useEffect, useState, useCallback } from 'react';
-import { getMe, getToken, clearToken } from '../services/api';
+import { clearToken, getMe, getToken } from '../services/api';
+import { logError } from '../utils/logger';
+
+// Ensure /auth/me is called once per page load even if useAuth() is used in many components.
+let _mePromise = null;
+let _meValue = null;
+
+async function getMeOnce() {
+  if (_meValue) return _meValue;
+  if (!_mePromise) {
+    _mePromise = getMe()
+      .then((me) => {
+        _meValue = me;
+        return me;
+      })
+      .finally(() => {
+        _mePromise = null;
+      });
+  }
+  return _mePromise;
+}
 
 export function useAuth() {
   const [user, setUser] = useState(null);
   const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    const onLogout = () => {
+      setUser(null);
+      setReady(true);
+    };
+    window.addEventListener('auth:logout', onLogout);
+    return () => window.removeEventListener('auth:logout', onLogout);
+  }, []);
 
   useEffect(() => {
     const token = getToken();
@@ -12,13 +41,13 @@ export function useAuth() {
       setReady(true);
       return;
     }
+
     (async () => {
       try {
-        const me = await getMe();
+        const me = await getMeOnce();
         setUser(me);
       } catch (err) {
-        // eslint-disable-next-line no-console
-        console.warn('[auth] invalid token, clearing', err?.response?.status || 'unknown');
+        logError(err);
         setUser(null);
         clearToken();
       } finally {
@@ -27,12 +56,9 @@ export function useAuth() {
     })();
   }, []);
 
-  const logout = useCallback(async () => {
-    try {
-      clearToken();
-    } finally {
-      setUser(null);
-    }
+  const logout = useCallback(() => {
+    clearToken();
+    setUser(null);
   }, []);
 
   return { user, ready, logout };

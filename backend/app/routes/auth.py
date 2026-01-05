@@ -40,8 +40,19 @@ def _cleanup_login_state(now: float) -> None:
         if now - float(_LOGIN_STATE[k].get("last", now)) > ttl:
             _LOGIN_STATE.pop(k, None)
 
+# If running behind a trusted reverse proxy, enable this to honor forwarded headers.
+_TRUST_PROXY_HEADERS = os.getenv("TRUST_PROXY_HEADERS", "0").lower() in ("1", "true", "yes")
+
 def _client_ip(request: Request) -> str:
-    # Prefer direct socket IP. (Behind a trusted proxy, you'd typically rely on forwarded headers.)
+    """
+    Prefer socket IP. If TRUST_PROXY_HEADERS=1, use X-Forwarded-For (first hop).
+    """
+    if _TRUST_PROXY_HEADERS:
+        xff = request.headers.get("x-forwarded-for")
+        if xff:
+            ip = xff.split(",")[0].strip()
+            if ip:
+                return ip
     return (request.client.host if request.client else "unknown") or "unknown"
 
 def _key_ip(ip: str) -> tuple[str, str]:

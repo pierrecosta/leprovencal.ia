@@ -1,6 +1,5 @@
-
 /* =====================================================================
-   App.css — Mise en page de l'application + animation logo + ajustements
+   App.css — Layout + animation only (typography/colors belong to theme.css/Tailwind)
    ===================================================================== */
 
 /* Conteneur principal de l'app */
@@ -33,20 +32,10 @@
   margin: 0.75rem auto;
 }
 
-/* Titres dans l’app — distinction forte avec le contenu */
-.App h1 {
-  color: var(--heading);
-  margin-top: 1rem;
-  margin-bottom: 0.75rem;
-}
-.App h2 {
-  color: var(--provence-lavender);
-  margin-bottom: 0.5rem;
-}
-.App p,
-.App li {
-  color: var(--provence-sage);
-}
+/* Titres / texte: moved to theme.css / Tailwind (avoid duplication) */
+/* .App h1 { ... } */
+/* .App h2 { ... } */
+/* .App p, .App li { ... } */
 
 /* Boutons (utilisent les classes .btn* définies dans theme.css) */
 .App .btn { margin-top: 0.5rem; }

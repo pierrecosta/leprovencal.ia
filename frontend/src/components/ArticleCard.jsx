@@ -1,16 +1,17 @@
 // components/ArticleCard.jsx
 import { useMemo, useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
-import { updateArticle } from '../services/api';
+import ApiAlert from './ApiAlert';
+import { getApiErrorMessage, updateArticle } from '../services/api';
 
 export default function ArticleCard({
   id,
   titre,
   description,
   imageUrl,
-  image_url,     // back-compat
+  image_url, // back-compat (should disappear once API normalization is everywhere)
   sourceUrl,
-  source_url,    // back-compat
+  source_url, // back-compat
   onUpdated,
 }) {
   const { user, ready } = useAuth();
@@ -78,18 +79,14 @@ export default function ArticleCard({
 
       const data = await updateArticle(id, payload);
 
-      setView({ ...form });
+      // Keep UI canonical/trimmed
+      setView({ ...payload });
+      setForm({ ...payload });
       setIsEditing(false);
 
       if (typeof onUpdated === 'function') onUpdated(data);
     } catch (err) {
-      const detail = err?.response?.data?.detail;
-      const message =
-        (detail && typeof detail === 'object' ? detail.message : detail) ||
-        err?.response?.data?.message ||
-        err?.message ||
-        "Une erreur est survenue lors de la mise à jour.";
-      setErrorMsg(message);
+      setErrorMsg(getApiErrorMessage(err) || "Une erreur est survenue lors de la mise à jour.");
     } finally {
       setLoading(false);
     }
@@ -201,7 +198,7 @@ export default function ArticleCard({
       </div>
 
       {/* Message d'erreur */}
-      {errorMsg && <div className="mt-2 text-sm text-red-600">{errorMsg}</div>}
+      {errorMsg && <ApiAlert message={errorMsg} kind="error" />}
     </div>
   );
 }

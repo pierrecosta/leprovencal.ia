@@ -49,28 +49,33 @@ npm start
 - Healthcheck API: http://localhost:8000/health (inclut `db`, `uptime_seconds`, `version`)
 
 ## ToDo for PROD
-A.a : Action 2: Générer une clé forte et la stocker uniquement dans le secret manager (pas dans git).
+
+### Topic A — Secrets & configuration
+#### A.a — SECRET_KEY
+- Action 2: Générer une clé forte et la stocker uniquement dans le secret manager (pas dans git).
   - `python -c "import secrets; print(secrets.token_urlsafe(64))"`
+
 ### Topic D — DB & migrations (PostgreSQL)
-#### Subtopic D.a — Compte DB & permissions
+#### D.a — Compte DB & permissions
 - Action 1: Utiliser un user DB dédié applicatif avec droits minimum (pas superuser).
 - Action 2: Bloquer l’accès réseau DB (security group/firewall): DB accessible seulement depuis le backend.
 
-#### Subtopic D.b — Migrations/seeds
+#### D.b — Migrations/seeds
 - Action 1: Éviter les migrations “dangereuses” sans backfill (NOT NULL/UNIQUE → corriger les données avant).
 - Action 2: Rendre les seeds idempotents (relançables sans dupliquer).
+
 ### Topic E — Sécurité HTTP (reverse proxy recommandé)
-#### Subtopic E.a — HTTPS uniquement
-- Créer un reverse proxy dans le dossier proxy
+#### E.a — HTTPS uniquement
 - Action 1: Mettre le backend derrière un reverse proxy (Nginx/Caddy/Traefik) avec TLS.
 - Action 2: Forcer la redirection HTTP→HTTPS et activer HSTS côté proxy.
 
-#### Subtopic E.b — Headers de sécurité (au proxy)
+#### E.b — Headers de sécurité (au proxy)
 - Action 1: Ajouter `Content-Security-Policy` (CSP) adaptée au front.
 - Action 2: Ajouter `X-Content-Type-Options: nosniff`, `Referrer-Policy`, `Permissions-Policy`.
 - Action 3: Vérifier que `expose_headers=["*"]` n’est pas nécessaire en prod (réduire au strict besoin).
 
-F.b : - Action 1: Ajouter rate limit sur les endpoints GET coûteux (ex: recherche).
+### Topic F — Rate limiting & anti-abus
+- Action (frontend): en cas de `429` sur `/auth/login`, respecter `Retry-After` (bouton désactivé + message).
 
 ### Topic H — Dépendances & supply chain
 #### Subtopic H.a — Audit & updates

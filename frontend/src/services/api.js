@@ -1,5 +1,6 @@
 // services/api.js
 import axios from 'axios';
+import { logApiError } from '../utils/logger';
 
 // ===== Base URL via .env (CRA) =====
 const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:8000';
@@ -17,7 +18,6 @@ const authHttp = axios.create({
 });
 
 // --- Token management ---
-// NOTE (prod): préférer cookie HttpOnly/Secure/SameSite plutôt que localStorage.
 const TOKEN_KEY = 'access_token';
 
 export function setToken(token) {
@@ -32,40 +32,34 @@ export function clearToken() {
   localStorage.removeItem(TOKEN_KEY);
 }
 
-// Interceptor pour l'instance auth
-authHttp.interceptors.request.use((config) => {
-  const token = getToken();
-  if (token) {
-    config.headers = {
-      ...config.headers,
-      Authorization: `Bearer ${token}`,
-    };
+// ==========================
+//   CROSS-CUTTING HELPERS
+// ==========================
+export function getRetryAfterSeconds(err) {
+  const raw = err?.response?.headers?.['retry-after'];
+  if (!raw) return null;
+  const n = Number(raw);
+  return Number.isFinite(n) && n > 0 ? n : null;
+}
+
+function dispatchLogout(reason = 'unauthorized') {
+  clearToken();
+
+  // Let the app react if it wants (optional)
+  try {
+    window.dispatchEvent(new CustomEvent('auth:logout', { detail: { reason } }));
+  } catch {
+    // ignore
   }
-  return config;
-});
 
-// ==========================
-//        ENDPOINTS
-// ==========================
-
-// --- Articles (publics) ---
-export const getArticles = () => http.get(`/articles`);
-
-// --- Dictionnaire (publics) ---
-export const getDictionary = (params) => http.get(`/dictionnaire`, { params });
-export const getThemes = () => http.get(`/dictionnaire/themes`);
-export const getCategories = (theme) =>
-  http.get(`/dictionnaire/categories`, { params: { theme } });
-
-// --- Histoires & Légendes (publics) ---
-export const getHistoires = (params) => http.get(`/histoires`, { params });
-export const getMenuHistoires = () => http.get(`/histoires/menu`);
-export const getHistoireById = (id) => http.get(`/histoires/${id}`);
-export const findHistoire = (titre) =>
-  http.get(`/histoires/find`, { params: { titre } });
-
-export const getHistoiresPaged = ({ page, limit }) =>
-  http.get(`/histoires/paged`, { params: { page, limit } });
+  // Minimal predictable behavior without needing App/useAuth changes.
+  // Avoid redirect loops if already on /login.
+  try {
+    if (window.location?.pathname !== '/login') window.location.assign('/login');
+  } catch {
+    // ignore
+  }
+}
 
 // ==========================
 //    NORMALISATION PAYLOADS
@@ -99,58 +93,143 @@ function normalizeDictionnairePayload(payload = {}) {
   };
 }
 
+// --- Response normalizers (defensive back-compat) ---
+function normalizeArticleOut(a = {}) {
+  return {
+    ...a,
+    imageUrl: a.imageUrl ?? a.image_url ?? a.src ?? '',
+    sourceUrl: a.sourceUrl ?? a.source_url ?? '',
+  };
+}
+
+function normalizeMotOut(m = {}) {
+  return {
+    ...m,
+    motsFrancais: m.motsFrancais ?? m.mots_francais ?? '',
+    motsProvencal: m.motsProvencal ?? m.mots_provencal ?? '',
+    synonymesFrancais: m.synonymesFrancais ?? m.synonymes_francais ?? '',
+    egProvencal: m.egProvencal ?? m.eg_provencal ?? '',
+    dProvencal: m.dProvencal ?? m.d_provencal ?? '',
+    aProvencal: m.aProvencal ?? m.a_provencal ?? '',
+    // keep theme/categorie/description as-is (already same name in API)
+  };
+}
+
 // ==========================
-//    UPDATED SERVICES
+//        AXIOS INSTANCES
 // ==========================
+
+// Interceptor pour l'instance auth
+authHttp.interceptors.request.use((config) => {
+  const token = getToken();
+  if (token) {
+    config.headers = {
+      ...config.headers,
+      Authorization: `Bearer ${token}`,
+    };
+  }
+  return config;
+});
+
+// Global response handling (auth)
+authHttp.interceptors.response.use(
+  (res) => res,
+  (err) => {
+    const status = err?.response?.status;
+    if (status === 401) dispatchLogout('token_invalid_or_expired');
+    logApiError(err);
+    return Promise.reject(err);
+  }
+);
+
+// Also log public API errors (no logout here)
+http.interceptors.response.use(
+  (res) => res,
+  (err) => {
+    logApiError(err);
+    return Promise.reject(err);
+  }
+);
+
+// ==========================
+//        ENDPOINTS
+// ==========================
+
+// --- Articles (publics) ---
+export const getArticles = () =>
+  http.get(`/articles`).then((res) => ({
+    ...res,
+    data: Array.isArray(res.data) ? res.data.map(normalizeArticleOut) : res.data,
+  }));
+
+// --- Dictionnaire (publics) ---
+export const getDictionary = (params) =>
+  http.get(`/dictionnaire`, { params }).then((res) => ({
+    ...res,
+    data: Array.isArray(res.data) ? res.data.map(normalizeMotOut) : res.data,
+  }));
+
+export const getThemes = () => http.get(`/dictionnaire/themes`);
+export const getCategories = (theme) => http.get(`/dictionnaire/categories`, { params: { theme } });
+
+// --- Histoires & Légendes (publics) ---
+export const getHistoires = (params) => http.get(`/histoires`, { params });
+
+// Keep response shape, but normalize res.data for UI camelCase-only consumption
+export const getMenuHistoires = () =>
+  http.get(`/histoires/menu`).then((res) => ({ ...res, data: normalizeMenuHistoiresOut(res.data) }));
+
+export const getHistoireById = (id) =>
+  http.get(`/histoires/${id}`).then((res) => ({ ...res, data: normalizeHistoireOut(res.data) }));
+
+export const findHistoire = (titre) =>
+  http.get(`/histoires/find`, { params: { titre } }).then((res) => ({
+    ...res,
+    data: Array.isArray(res.data) ? res.data.map(normalizeHistoireOut) : res.data,
+  }));
+
+export const getHistoiresPaged = ({ page, limit }) => http.get(`/histoires/paged`, { params: { page, limit } });
 
 // --- Dictionnaire: update d'un mot (ligne du tableau)
 export async function updateMot(id, payload) {
-  const { data } = await authHttp.put(`/dictionnaire/${id}`, normalizeDictionnairePayload(payload), {
-    headers: { 'Content-Type': 'application/json' },
-  });
-  return data;
+  const { data } = await authHttp.put(
+    `/dictionnaire/${id}`,
+    normalizeDictionnairePayload(payload),
+    { headers: { 'Content-Type': 'application/json' } }
+  );
+  return normalizeMotOut(data);
 }
 
 // --- Articles: update d'une carte/article
 export async function updateArticle(id, payload) {
-  const { data } = await authHttp.put(`/articles/${id}`, normalizeArticlePayload(payload), {
-    headers: { 'Content-Type': 'application/json' },
-  });
-  return data;
+  const { data } = await authHttp.put(
+    `/articles/${id}`,
+    normalizeArticlePayload(payload),
+    { headers: { 'Content-Type': 'application/json' } }
+  );
+  return normalizeArticleOut(data);
 }
 
 // ==========================
 //       AUTH SERVICES
 // ==========================
 
-/**
- * Login (FastAPI OAuth2PasswordRequestForm)
- * - Content-Type: application/x-www-form-urlencoded
- * - Retour: { access_token, token_type }
- */
 export async function login({ username, password }) {
   const params = new URLSearchParams();
   params.append('username', username);
   params.append('password', password);
 
-  const { data } = await axios.post(`${API_BASE}/auth/login`, params, {
+  const { data } = await http.post(`/auth/login`, params, {
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
   });
 
-  if (data?.access_token) {
-    setToken(data.access_token);
-  }
+  if (data?.access_token) setToken(data.access_token);
   return data;
 }
 
-/**
- * Register (JSON UserCreate)
- * - Body: { username, password }
- * - Retour: UserResponse (défini côté FastAPI)
- */
 export async function register({ username, password }) {
-  const { data } = await axios.post(
-    `${API_BASE}/auth/register`,
+  const { data } = await http.post(
+    `/auth/register`,
     { username, password },
     { headers: { 'Content-Type': 'application/json' } }
   );
@@ -169,7 +248,7 @@ export async function getMe() {
 
 // (Optionnel) helper logout
 export function logout() {
-  clearToken();
+  dispatchLogout('manual');
 }
 
 // ==========================

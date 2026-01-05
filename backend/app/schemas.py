@@ -2,6 +2,11 @@ from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
+# NOTE:
+# - DB/internal: snake_case
+# - API (frontend): camelCase via alias_generator (populate_by_name=True)
+# - Frontend should send/consume camelCase; API layer may normalize defensively.
+
 # --- camelCase aliases for the API (frontend) while keeping snake_case internally (backend/db) ---
 # Errors contract (HTTPException.detail): {"code": "...", "message": "...", "field": "optional"}
 # Common codes: validation_error, not_found, unauthorized, conflict, auth_required, auth_invalid, rate_limited
