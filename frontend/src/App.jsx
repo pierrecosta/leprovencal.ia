@@ -6,6 +6,7 @@ import HomePage from './pages/HomePage';
 import DictionaryPage from './pages/DictionaryPage';
 import GeographyPage from './pages/GeographyPage';
 import HistoryPage from './pages/HistoryPage';
+import Login from './pages/LoginPage';
 import './App.css';
 import './theme.css';
 
@@ -22,6 +23,7 @@ function App() {
           <Route path="/langue-dictionnaire" element={<DictionaryPage />} />
           <Route path="/geographie" element={<GeographyPage />} />
           <Route path="/histoire-legendes" element={<HistoryPage />} />
+          <Route path="/login" element={<Login />} />
         </Routes>
       </main>
 

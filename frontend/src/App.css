@@ -1,11 +1,67 @@
 
+/* =====================================================================
+   App.css — Mise en page de l'application + animation logo + ajustements
+   ===================================================================== */
+
+/* Conteneur principal de l'app */
 .App {
   text-align: center;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
 }
 
+/* Barre de navigation (styles de base dans theme.css) */
+.App .navbar {
+  margin-bottom: 1rem;
+}
+
+/* Conteneur contenu central */
+.App .container {
+  max-width: var(--container-max);
+  margin: 1.2rem auto;
+  padding: 0 var(--container-padding);
+}
+
+/* Sections (s’appuient sur .section de theme.css) */
+.App .section {
+  margin: 1.25rem auto;
+}
+
+/* Cartes (s’appuient sur .card de theme.css) */
+.App .card {
+  margin: 0.75rem auto;
+}
+
+/* Titres dans l’app — distinction forte avec le contenu */
+.App h1 {
+  color: var(--heading);
+  margin-top: 1rem;
+  margin-bottom: 0.75rem;
+}
+.App h2 {
+  color: var(--provence-lavender);
+  margin-bottom: 0.5rem;
+}
+.App p,
+.App li {
+  color: var(--provence-sage);
+}
+
+/* Boutons (utilisent les classes .btn* définies dans theme.css) */
+.App .btn { margin-top: 0.5rem; }
+
+/* Logo React / illustration */
 .App-logo {
   height: 40vmin;
   pointer-events: none;
+  filter: drop-shadow(0 8px 20px rgba(75, 58, 94, 0.16));
+  transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+.App-logo:hover {
+  transform: scale(1.02);
+  filter: drop-shadow(0 12px 28px rgba(75, 58, 94, 0.18));
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -15,10 +71,39 @@
 }
 
 @keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
 }
+
+/* Pied de page léger */
+.App-footer {
+  margin-top: 2rem;
+  padding: 1rem 0;
+  color: var(--text-muted);
+  border-top: 1px solid var(--border);
+}
+
+/* Liens du pied de page */
+.App-footer a {
+  color: var(--link);
+}
+.App-footer a:hover {
+  color: var(--link-hover);
+}
+
+/* Utilitaires locaux */
+.App .spacer { height: 1rem; }
+.App .hr { height: 1px; background: var(--border); border: none; margin: 1.5rem 0; }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .App .container {
+    padding: 0 0.75rem;
+  }
+  .App-logo {
+    height: 48vmin;
+  }
+  .App h1 { font-size: clamp(1.8rem, 1.6rem + 3vw, 2.4rem); }
+  .App h2 { font-size: clamp(1.4rem, 1.3rem + 2.4vw, 2rem); }
+}
+

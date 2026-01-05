@@ -21,7 +21,7 @@ from app.utils.security import (
     require_authenticated,
 )
 
-router = APIRouter(prefix="/auth", tags=["Authentication"])
+router = APIRouter()
 
 # ==========================
 # Configuration
