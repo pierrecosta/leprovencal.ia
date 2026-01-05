@@ -1,7 +1,7 @@
 // pages/Login.jsx
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { login, getMe } from '../services/api';
+import { login, getMe, getApiErrorMessage } from '../services/api';
 
 export default function Login() {
   const [form, setForm] = useState({ username: '', password: '' });
@@ -27,11 +27,7 @@ export default function Login() {
       navigate('/');
     } catch (err) {
       const status = err?.response?.status;
-      const detail = err?.response?.data?.detail;
-      const backendMsg = detail && typeof detail === 'object' ? detail.message : detail;
-
-      // eslint-disable-next-line no-console
-      console.error('[login]', { status, err });
+      const backendMsg = getApiErrorMessage(err);
 
       setError(
         backendMsg ||
@@ -74,7 +70,7 @@ export default function Login() {
         {error && <p className="text-red-600">{error}</p>}
 
         <button type="submit" disabled={loading} className="btn btn-primary w-full disabled:opacity-50">
-          {loading ? 'Connexion...' : 'Login'}
+          {loading ? 'Connexion...' : 'Se connecter'}
         </button>
       </form>
     </div>

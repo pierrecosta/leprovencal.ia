@@ -1,6 +1,7 @@
 """Initial tables
 
 # Note: /health performs a simple `SELECT 1` against the DB; keep DB reachable in deployments.
+# Security note: avoid logging secrets/DB URLs in production logs.
 
 Revision ID: db47d488850f
 Revises: 

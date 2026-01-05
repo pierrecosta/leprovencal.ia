@@ -1,16 +1,13 @@
 from __future__ import annotations
 
 from datetime import timedelta
-import os
 
 from sqlalchemy.orm import Session
 
 from app.crud import users as users_crud
 from app.schemas import UserCreate
 from app.services.errors import ConflictError, UnauthorizedError, ValidationError
-from app.utils.security import create_access_token, hash_password, verify_password
-
-ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 30))
+from app.utils.security import create_access_token, hash_password, verify_password, ACCESS_TOKEN_EXPIRE_MINUTES
 
 
 def register_user_service(db: Session, *, user_in: UserCreate):

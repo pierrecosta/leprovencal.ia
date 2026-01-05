@@ -6,36 +6,32 @@ Stack: FastAPI + Passlib + PyJWT (via jose)
 
 from datetime import datetime, timedelta
 from typing import Optional, Dict
+import os
 
 from jose import JWTError, jwt
+from jose.exceptions import ExpiredSignatureError
 from passlib.context import CryptContext
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, status
 from fastapi.security import OAuth2PasswordBearer
 from app.utils.http_errors import http_error
 
-# --- central config ---
-try:
-    # preferred: backend/core/config.py
-    from core.config import settings as _settings  # type: ignore
-except Exception:  # pragma: no cover
-    # fallback (if your project exposes settings elsewhere)
-    from app.config import settings as _settings  # type: ignore
+from app.config import settings as _settings
 
-
-def _setting(name: str, default):
-    return getattr(_settings, name, default)
-
+def _is_production(env: str) -> bool:
+    return env.lower() in {"prod", "production"}
 
 # ==========================
 # Configuration
 # ==========================
-SECRET_KEY: str = _setting("SECRET_KEY", _setting("secret_key", "change-me"))
-ALGORITHM: str = _setting("ALGORITHM", _setting("algorithm", "HS256"))
+ENV: str = str(getattr(_settings, "env", os.getenv("ENV", "development") or "development")).lower()
+
+SECRET_KEY: str = str(getattr(_settings, "secret_key", os.getenv("SECRET_KEY", "change-me")))
+if _is_production(ENV) and (not SECRET_KEY or SECRET_KEY == "change-me"):
+    raise RuntimeError("Invalid SECRET_KEY in production (must be set and not default)")
+
+ALGORITHM: str = str(getattr(_settings, "algorithm", os.getenv("ALGORITHM", "HS256") or "HS256"))
 ACCESS_TOKEN_EXPIRE_MINUTES: int = int(
-    _setting(
-        "ACCESS_TOKEN_EXPIRE_MINUTES",
-        _setting("access_token_expire_minutes", 30),
-    )
+    getattr(_settings, "access_token_expire_minutes", os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 30))
 )
 
 # ==========================
@@ -86,7 +82,7 @@ def decode_access_token(token: str) -> Optional[Dict[str, str]]:
     """
     try:
         return jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-    except JWTError:
+    except (ExpiredSignatureError, JWTError):
         return None
 
 

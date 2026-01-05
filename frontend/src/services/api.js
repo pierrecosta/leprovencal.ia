@@ -17,6 +17,7 @@ const authHttp = axios.create({
 });
 
 // --- Token management ---
+// NOTE (prod): préférer cookie HttpOnly/Secure/SameSite plutôt que localStorage.
 const TOKEN_KEY = 'access_token';
 
 export function setToken(token) {

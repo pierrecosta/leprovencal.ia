@@ -4,7 +4,7 @@ Description: Routes d'authentification (login, register) avec JWT et bcrypt.
 Stack: FastAPI + SQLAlchemy + Passlib + PyJWT
 """
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
@@ -46,7 +46,12 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
             db, username=form_data.username, password=form_data.password
         )
     except UnauthorizedError as e:
-        raise http_error(status.HTTP_401_UNAUTHORIZED, code="unauthorized", message=str(e))
+        raise http_error(
+            status.HTTP_401_UNAUTHORIZED,
+            code="unauthorized",
+            message=str(e),
+            headers={"WWW-Authenticate": "Bearer"},
+        )
 
 
 # ==========================

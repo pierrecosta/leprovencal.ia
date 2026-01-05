@@ -30,7 +30,7 @@ export default function Header() {
                 Connecté : {user.username}
               </span>
               <button onClick={handleLogout} className="btn btn-accent" aria-label="Se déconnecter" title="Se déconnecter">
-                Logout
+                Se déconnecter
               </button>
             </div>
           ) : (

@@ -34,3 +34,7 @@ Exemples (côté frontend) :
 ## Observabilité (optionnel)
 Activer les logs web-vitals :
 - `REACT_APP_WEB_VITALS=1`
+
+## Auth (note prod)
+- Actuellement, le token est stocké dans `localStorage`.
+- En production, préférer un cookie `HttpOnly; Secure; SameSite` (réduit le risque XSS).

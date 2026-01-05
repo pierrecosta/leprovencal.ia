@@ -16,6 +16,15 @@ Initialisation de l'environnement
 	python -m pip install -r requirements.txt
 
 Variables d'environnement (.env)
+	ENV=development
 	DATABASE_URL=postgresql+psycopg2://myuser:mypassword@localhost:5432/provencal_db
+	SECRET_KEY=change-me
+
+	# PROD (recommandé)
+	# ENV=production
+	# SECRET_KEY=... (obligatoire; "change-me" interdit, fail-fast)
+	# ALLOWED_ORIGINS=https://votre-frontend.tld (pas de '*', pas de localhost)
+	# LOG_LEVEL=INFO (DEBUG neutralisé en prod)
+
 	# Optionnel (CORS) - liste séparée par des virgules
 	ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000

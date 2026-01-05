@@ -34,10 +34,11 @@ npm start
 
 ## Configuration (.env)
 ### Backend (`backend/.env`)
+- `ENV=development|production` (recommandé ; en `production`, durcissements activés)
 - `DATABASE_URL=postgresql+psycopg2://myuser:mypassword@localhost:5432/provencal_db`
-- `SECRET_KEY=...` (obligatoire en prod)
-- `ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000` (optionnel)
-- `LOG_LEVEL=INFO` (optionnel: DEBUG/INFO/WARNING/ERROR)
+- `SECRET_KEY=...` (**obligatoire en prod** ; valeur `change-me` interdite, l'app fail-fast au démarrage)
+- `ALLOWED_ORIGINS=https://votre-domaine-frontend.tld` (en prod : pas de `*`, pas de `localhost`)
+- `LOG_LEVEL=INFO` (en prod : `DEBUG` est neutralisé)
 
 ### Frontend (`frontend/.env`)
 - `REACT_APP_API_URL=http://localhost:8000` (optionnel, défaut: `http://localhost:8000`)
@@ -47,193 +48,103 @@ npm start
 - Backend: http://localhost:8000
 - Healthcheck API: http://localhost:8000/health (inclut `db`, `uptime_seconds`, `version`)
 
-## Revue backend (suggestions senior)
-### 1) Contrats & cohérence DB ⇄ API (proposition améliorée)
-**Objectif :** éviter les “surprises” entre DB, ORM, schémas Pydantic et payloads front (bugs, 422, UX dégradée).
+## ToDo for PROD
+A.a : Action 2: Générer une clé forte et la stocker uniquement dans le secret manager (pas dans git).
+  - `python -c "import secrets; print(secrets.token_urlsafe(64))"`
+### Topic D — DB & migrations (PostgreSQL)
+#### Subtopic D.a — Compte DB & permissions
+- Action 1: Utiliser un user DB dédié applicatif avec droits minimum (pas superuser).
+- Action 2: Bloquer l’accès réseau DB (security group/firewall): DB accessible seulement depuis le backend.
 
-**Règles de base (à appliquer partout)**
-- **Nullabilité :** `DB nullable=True` ⇄ `Optional[...]` côté Pydantic.  
-  Si le champ est requis métier → **NOT NULL** en DB + validation Pydantic (et idéalement valeurs par défaut).
-- **Schémas par intention :**
-  - `XCreate` : champs requis pour créer (minimaux, cohérents avec NOT NULL).
-  - `XUpdate` : champs **tous optionnels** (PATCH-like), pour éviter d’exiger des champs non modifiés.
-  - `XOut` : réponse API (inclut `id`, champs calculés/normalisés).
-- **Conventions de nommage :** choisir et tenir une convention (ex: `snake_case` côté API/DB).  
-  Si le front consomme du `camelCase`, documenter un mapping (ou activer alias Pydantic) et s’y tenir.
-- **Normalisation de domaine :** éviter les doublons sémantiques (`titre` vs `title`, `image_url` vs `src`).  
-  Décider *une* représentation canonique et migrer progressivement.
+#### Subtopic D.b — Migrations/seeds
+- Action 1: Éviter les migrations “dangereuses” sans backfill (NOT NULL/UNIQUE → corriger les données avant).
+- Action 2: Rendre les seeds idempotents (relançables sans dupliquer).
+### Topic E — Sécurité HTTP (reverse proxy recommandé)
+#### Subtopic E.a — HTTPS uniquement
+- Créer un reverse proxy dans le dossier proxy
+- Action 1: Mettre le backend derrière un reverse proxy (Nginx/Caddy/Traefik) avec TLS.
+- Action 2: Forcer la redirection HTTP→HTTPS et activer HSTS côté proxy.
 
-**Checklist actionnable**
-- Modèles SQLAlchemy : `nullable`, `unique`, `index`, `ForeignKey` (si applicable) alignés avec le métier.
-- Migrations Alembic : ajouter contraintes (NOT NULL, UNIQUE), defaults, indexes de recherche.
-- Schémas Pydantic : validations (longueurs, regex simples, trimming), `from_attributes=True` pour `Out`.
-- Réponses API : toujours retourner un `response_model` cohérent (éviter dict ad-hoc).
-- Erreurs : messages HTTPException stables + exploitables côté front (ex: “title is required” vs “Invalid payload”).
-- OpenAPI : documenter exemples de payloads (create/update) + réponses (out).
+#### Subtopic E.b — Headers de sécurité (au proxy)
+- Action 1: Ajouter `Content-Security-Policy` (CSP) adaptée au front.
+- Action 2: Ajouter `X-Content-Type-Options: nosniff`, `Referrer-Policy`, `Permissions-Policy`.
+- Action 3: Vérifier que `expose_headers=["*"]` n’est pas nécessaire en prod (réduire au strict besoin).
 
-**Exemples de pièges fréquents**
-- DB accepte `NULL` mais Pydantic exige `str` → 422 à l’update ou lors de sérialisation.
-- DB `String(100)` mais pas de validation → erreurs tardives / truncation / incohérences.
-- Champs “front-only” (`src`) vs “API/DB” (`image_url`) → confusion et bugs de mapping.
+F.b : - Action 1: Ajouter rate limit sur les endpoints GET coûteux (ex: recherche).
 
-### 2) Auth & sécurité (actions concrètes pour junior)
-Objectif : éviter les 401 “surprises”, sécuriser la config JWT, et rendre le comportement testable.
+### Topic H — Dépendances & supply chain
+#### Subtopic H.a — Audit & updates
+- Action 1: Geler les versions (requirements) et faire un audit régulier (ex: `pip-audit`).
+- Action 2: Mettre à jour rapidement `fastapi`, `sqlalchemy`, `python-jose`, `passlib`, `bcrypt` en cas de CVE.
 
-#### 2.1 Vérifier l’auth “optionnelle” (pas de 401 automatique)
-Dans le code :
-- Le schéma OAuth2 doit être configuré en **optionnel** (`auto_error=False`) pour les routes publiques.
-  - Voir : `backend/app/utils/security.py` (`oauth2_scheme = OAuth2PasswordBearer(..., auto_error=False)`).
-- Pour les routes **privées**, on doit utiliser la dépendance qui **force** l’auth :
-  - Voir : `backend/app/utils/security.py` → `require_authenticated(...)`
-  - Exemple : `backend/app/routes/auth.py` → `GET /auth/me`
+---
 
-Actions à mener :
-1) **Lister** les endpoints :
-   - Publics : lecture (GET articles/dictionnaire/histoires)
-   - Privés : création/modif/suppression (POST/PUT/DELETE)
-2) Sur chaque endpoint privé, ajouter `Depends(require_authenticated)` (ou vérifier qu’il est déjà présent).
-3) Sur les endpoints publics, si on a besoin de connaître l’utilisateur *sans obliger le login* :
-   - utiliser `get_current_user_optional(...)` (retourne `None` si pas de token).
+### Topic I — Déploiement (hardening)
+#### Subtopic I.a — Uvicorn/Gunicorn & workers
+- Action 1: En prod, lancer via gunicorn/uvicorn workers, pas `--reload`.
+- Action 2: Définir timeouts, limites de payload (proxy + app).
 
-Critère de validation (manuel) :
-- Appeler un endpoint public **sans** header `Authorization` → doit répondre `200`.
-- Appeler un endpoint privé **sans** token → doit répondre `401` avec `WWW-Authenticate: Bearer`.
-- Appeler un endpoint privé **avec** token valide → doit répondre `200/201`.
+#### Subtopic I.b — Conteneurs / OS
+- Action 1: Exécuter en user non-root.
+- Action 2: Secrets via env/secret manager, pas baked-in image.
+- Action 3: Activer logs/metrics au niveau infra (proxy + app).
+## Revue backend (suggestions cyber)
 
-#### 2.2 SECRET_KEY : fail-fast en prod (interdire un défaut)
-Problème à éviter :
-- Un `SECRET_KEY` “par défaut” (ex: `"change-me"`) rend les tokens prévisibles et compromet la sécurité.
+### Topic A — Secrets & configuration
+#### Subtopic A.a — SECRET_KEY (JWT) & variables d’environnement
+- Action 1: En prod, **interdire** tout `SECRET_KEY` par défaut (`change-me`) et **fail-fast** au démarrage si absent.
+- Action 3: Séparer clairement `ENV=development|production` et vérifier que les comportements “dev” (CORS large, logs verbeux) sont désactivés en prod.
+- Action 4: Ne jamais logguer de secrets (token, mots de passe, URL DB complète).
 
-Dans le code :
-- Le JWT est géré dans `backend/app/utils/security.py` (variables `SECRET_KEY`, `ALGORITHM`).
+#### Subtopic A.b — ALLOWED_ORIGINS / CORS
+- Action 1:  **ne pas** autoriser `*`. Lister uniquement le(s) domaine(s) front. En dev autoriser uniquement localhost
+- Action 2: Tester:
+  - requête depuis un origin non autorisé → doit être bloquée par le navigateur (CORS).
+  - requête depuis le front prod → doit passer.
 
-Actions à mener :
-1) Ajouter une règle “prod” : si `ENV=production` (ou équivalent) et `SECRET_KEY` est manquant/valeur par défaut → **crash au démarrage**.
-2) Documenter une commande/recette pour générer une clé forte :
-   - Windows PowerShell :
-     - `python -c "import secrets; print(secrets.token_urlsafe(64))"`
-3) Vérifier que `backend/.env` contient bien `SECRET_KEY=...` en prod (jamais commité).
+### Topic B — Authentification & JWT
+#### Subtopic B.a — Expiration & validation
+- Action 1: Garder `ACCESS_TOKEN_EXPIRE_MINUTES` court (ex: 30) et configurable via env.
+- Action 2: Vérifier que `require_authenticated` renvoie `401` avec `WWW-Authenticate: Bearer` si token absent/invalide/expiré.
+- Action 3: Ajouter un test manuel: token expiré → endpoints privés → `401`.
 
-Critère de validation :
-- En prod : démarrage sans SECRET_KEY → l’app refuse de démarrer avec un message clair.
-- En dev : un SECRET_KEY de dev est autorisé (mais explicite).
+#### Subtopic B.b — Surface d’attaque endpoints
+- Action 1: Vérifier que **toutes** les routes POST/PUT/DELETE utilisent `Depends(require_authenticated)`.
+- Action 2: Vérifier que les routes GET publiques ne forcent pas l’auth (pas de 401 surprise).
 
-#### 2.3 JWT : claims minimaux + expiration
-À garantir :
-- `sub` (username) + `exp` obligatoires (déjà attendu par `require_authenticated`).
-- L’expiration doit être courte (ex: 30 min) et configurable via env.
+#### Subtopic B.c — Stockage du token côté front (rappel)
+- Action 1: Préférer cookie `HttpOnly; Secure; SameSite`.
 
-Dans le code :
-- `backend/app/routes/auth.py` crée le token avec `sub`.
-- `backend/app/utils/security.py` ajoute `exp` via `create_access_token(...)`.
+### Topic C — Erreurs API stables (contrat exploitable)
+#### Subtopic C.a — Format de réponse d’erreur
+- Action 1: Standardiser `HTTPException.detail` au format:
+  - `{"code": "...", "message": "...", "field": "optionnel"}`
+- Action 2: Utiliser des codes stables (`validation_error`, `not_found`, `unauthorized`, `conflict`, `auth_required`, `auth_invalid`) pour faciliter le traitement côté front.
+- Action 3: Tester côté front que les messages affichés ne deviennent jamais `[object Object]`.
 
-Actions à mener :
-1) Confirmer que `ACCESS_TOKEN_EXPIRE_MINUTES` est configurable via env (et utilisé partout).
-2) Ajouter (optionnel) `issuer/audience` si besoin métier (sinon ne pas complexifier).
+### Topic F — Rate limiting & anti-abus
+#### Subtopic F.a — Protection brute force login
+- Action 1: Ajouter un rate limit sur `/auth/login` (par IP + par username).
+- Action 2: Ajouter un délai progressif / verrouillage temporaire après N échecs.
 
-Critère de validation :
-- Token expiré → endpoints privés répondent `401`.
-- Token sans `sub`/`exp` → endpoints privés répondent `401`.
+#### Subtopic F.b — Protection endpoints publics
+- Action 2: Définir des limites `limit` raisonnables (déjà partiellement fait) et tester l’impact.
 
-#### 2.4 Tests minimum à écrire (pytest)
-À ajouter côté backend :
-1) `POST /auth/login` :
-   - mauvais password → `401`
-   - bon password → `200` + `access_token`
-2) `GET /auth/me` :
-   - sans token → `401`
-   - avec token → `200` + `{ "username": ... }`
-3) 1 endpoint public :
-   - sans token → `200`
+### Topic G — Observabilité & logs (sans fuite de données)
+#### Subtopic G.a — Logging structuré
+- Action 1: Remplacer `print` par `logging` partout.
+- Action 2: Utiliser un format log stable (timestamp, level, module, request_id si possible).
+- Action 3: Filtrer/masquer données sensibles (Authorization header, passwords).
 
+#### Subtopic G.b — Healthcheck
+- Action 1: `/health` doit inclure au minimum DB ok + version + uptime (déjà fait).
+- Action 2: En prod, exposer `/health` uniquement au réseau interne (ou le protéger).
 
-### 3) Migrations & seeds
-- Éviter les migrations vides (supprimer ou compléter).
-- Seeds idempotents (upsert/détection de doublons) pour pouvoir relancer `init_app.py`.
-
-### 4) Structure & qualité
-#### 4.1 Séparer routes → services → CRUD/DB → schemas (guide junior, pas à pas)
-**Objectif :** rendre le backend lisible, testable et éviter que les routes “fassent tout” (validation métier, SQL, mapping, etc.).
-
-##### 4.1.1 Rôles (qui fait quoi ?)
-- **Routes (`backend/app/routes/*.py`)**
-  - Déclarent les endpoints (path, méthodes HTTP).
-  - Dépendances FastAPI (DB session, auth).
-  - Ne contiennent que de la glue : appels vers `services`, gestion des codes HTTP.
-- **Schemas (`backend/app/schemas.py` ou `backend/app/schemas/*.py`)**
-  - Contrats d’entrée/sortie API (Pydantic) : `XCreate`, `XUpdate`, `XOut`.
-  - Validation simple (types, longueurs, optionalité), aliases si besoin.
-- **CRUD/DB (`backend/app/crud/*.py`)**
-  - Requêtes SQLAlchemy “pures” : `get_by_id`, `list`, `create`, `update`, `delete`.
-  - Pas de logique métier (pas de règles type “si article déjà publié alors…”).
-  - Ne dépend pas de FastAPI (pas de `Request`, pas de `HTTPException`).
-- **Services (`backend/app/services/*.py`)**
-  - Logique métier et orchestration.
-  - Appelle le CRUD, applique les règles métier, gère les cas “not found / conflict”.
-  - C’est la couche la plus simple à tester (unit tests).
-
-> Règle pratique : **une route ne doit pas avoir de `.query(...)`** (sauf exception justifiée).
-
-##### 4.1.2 Checklist “refactor d’un endpoint” (méthode)
-Pour un endpoint existant (ex: `POST /articles`) :
-1) **Schéma** : créer/valider `ArticleCreate` + `ArticleOut`.
-2) **CRUD** : extraire la requête DB dans `crud/articles.py` (create + get).
-3) **Service** : créer `services/articles.py` qui :
-   - valide les règles métier (ex: unicité, normalisation, defaults),
-   - appelle `crud`,
-   - décide quoi faire en cas d’absence/conflit.
-4) **Route** : remplacer le code par un appel service :
-   - dépendances (`db`, `current_user`),
-   - `response_model=ArticleOut`,
-   - mapping minimal (idéalement aucun mapping manuel).
-
-##### 4.1.3 Convention de nommage (simple et constante)
-- CRUD : `crud_<resource>.py` ou dossier `crud/<resource>.py`
-  - Fonctions : `get_<resource>`, `list_<resources>`, `create_<resource>`, `update_<resource>`, `delete_<resource>`
-- Services : `services/<resource>.py`
-  - Fonctions : `create_<resource>_service`, `update_<resource>_service` (ou plus court si vous préférez, mais uniforme)
-- Schemas : `schemas.py` ou `schemas/<resource>.py`
-  - Classes : `<Resource>Create`, `<Resource>Update`, `<Resource>Out`
-
-##### 4.1.4 “Done” (critères d’acceptation)
-- Les routes font < ~30 lignes (hors docstring) et ne contiennent pas de requêtes SQLAlchemy directes.
-- Le CRUD n’a **aucun** import FastAPI.
-- Les erreurs “métier” sont traitées dans la couche service (ex: doublon → 409).
-- Tests :
-  - unit tests sur services (sans HTTP),
-  - 1–2 tests d’intégration sur routes (client FastAPI) pour vérifier status codes + schémas.
+## Tests manuels (auth/JWT)
+- Token expiré :
+  1. Se connecter et récupérer `access_token` (frontend ou réponse `/auth/login`).
+  2. Attendre l’expiration (ou réduire `ACCESS_TOKEN_EXPIRE_MINUTES=1`).
+  3. Appeler un endpoint privé (ex: `GET /auth/me` ou `PUT /articles/{id}`) avec `Authorization: Bearer <token>`.
+  4. Attendu : `401` + header `WWW-Authenticate: Bearer`.
 
 
-- Tests (pytest): auth, endpoints clés, cas d’erreur.
-
-### 5) Observabilité
-- Remplacer `print` par `logging` (niveaux + format).
-- Healthcheck: enrichir si nécessaire (DB ok, version, etc.).
-
-## Conventions (frontend ⇄ backend)
-
-### Nommage & mapping API
-- **Backend / DB / ORM** : `snake_case` (ex: `image_url`, `mots_francais`).
-- **Frontend (JS/React)** : `camelCase` (ex: `imageUrl`, `motsFrancais`).
-- **API** : accepte et renvoie du `camelCase` via les aliases Pydantic, tout en conservant le `snake_case` en interne.
-
-**Canonique à utiliser côté frontend (payloads & lecture)**
-- Article : `id`, `titre`, `description`, `imageUrl`, `sourceUrl`
-- Dictionnaire : `id`, `theme`, `categorie`, `motsFrancais`, `motsProvencal`, `synonymesFrancais`, `egProvencal`, `dProvencal`, `aProvencal`, `description`
-
-### Thème / couleurs (source de vérité)
-- **Source unique** : `frontend/src/theme.css` (variables CSS `--primary`, `--secondary`, `--accent`, etc.).
-- **Aliases stables** : utiliser aussi `--color-*` (ex: `--color-lavender`, `--color-terra`) pour éviter toute duplication d’hex.
-- **Tailwind** : les couleurs Tailwind pointent vers ces variables CSS (pas de valeurs hex dupliquées).
-
-## Contrat d’erreurs API (stable)
-Les endpoints renvoient des erreurs au format:
-```json
-{
-  "detail": {
-    "code": "validation_error|not_found|unauthorized|conflict|auth_required|auth_invalid",
-    "message": "Message lisible",
-    "field": "optionnel"
-  }
-}
-```

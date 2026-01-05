@@ -18,7 +18,7 @@ export function useAuth() {
         setUser(me);
       } catch (err) {
         // eslint-disable-next-line no-console
-        console.warn('[auth] invalid token, clearing', err?.response?.status);
+        console.warn('[auth] invalid token, clearing', err?.response?.status || 'unknown');
         setUser(null);
         clearToken();
       } finally {

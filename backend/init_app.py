@@ -9,8 +9,15 @@ from app.core.config import get_settings
 
 settings = get_settings()
 
+def _is_production(env: str) -> bool:
+    return env.lower() in {"prod", "production"}
+
+ENV = str(getattr(settings, "env", os.getenv("ENV", "development") or "development")).lower()
+_requested_level = (os.getenv("LOG_LEVEL", getattr(settings, "log_level", "INFO")) or "INFO").upper()
+_effective_level = "INFO" if (_is_production(ENV) and _requested_level == "DEBUG") else _requested_level
+
 logging.basicConfig(
-    level=os.getenv("LOG_LEVEL", "INFO").upper(),
+    level=_effective_level,
     format="%(asctime)s %(levelname)s %(name)s - %(message)s",
 )
 logger = logging.getLogger("init_app")
@@ -22,7 +29,11 @@ def check_db_connection():
         with engine.connect():
             logger.info("Connexion à la base réussie.")
     except OperationalError:
-        logger.exception("Impossible de se connecter à la base.")
+        # En prod, éviter les traces qui peuvent contenir des détails sensibles
+        if _is_production(ENV):
+            logger.error("Impossible de se connecter à la base.")
+        else:
+            logger.exception("Impossible de se connecter à la base.")
         sys.exit(1)
 
 def run_alembic_migrations():

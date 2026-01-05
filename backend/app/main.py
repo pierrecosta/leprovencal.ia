@@ -14,15 +14,18 @@ settings = get_settings()
 logger = logging.getLogger(__name__)
 _app_start_ts = time.time()
 
+def _is_production(env: str) -> bool:
+    return env.lower() in {"prod", "production"}
+
 app = FastAPI(title="API Provençale", version="2.0")
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=list(settings.allowed_origins),
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-    expose_headers=["*"],
+    allow_methods=["*"] if not _is_production(settings.env) else ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["*"] if not _is_production(settings.env) else ["Authorization", "Content-Type"],
+    expose_headers=["*"] if not _is_production(settings.env) else [],
 )
 
 @app.get("/health", tags=["Health"])
