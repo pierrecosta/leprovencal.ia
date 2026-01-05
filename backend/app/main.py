@@ -25,7 +25,7 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"] if not _is_production(settings.env) else ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"] if not _is_production(settings.env) else ["Authorization", "Content-Type"],
-    expose_headers=["*"] if not _is_production(settings.env) else [],
+    expose_headers=["*"] if not _is_production(settings.env) else ["Retry-After"],
 )
 
 @app.get("/health", tags=["Health"])

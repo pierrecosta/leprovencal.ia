@@ -38,3 +38,13 @@ Activer les logs web-vitals :
 ## Auth (note prod)
 - Actuellement, le token est stocké dans `localStorage`.
 - En production, préférer un cookie `HttpOnly; Secure; SameSite` (réduit le risque XSS).
+
+## Auth (anti-abus)
+- Le backend peut renvoyer `429` sur `/auth/login` (rate limiting) avec `Retry-After`.
+- Affichage: utiliser `getApiErrorMessage(err)`.
+
+## Erreurs API (contrat)
+Le backend renvoie les erreurs au format :
+- `detail = { "code": string, "message": string, "field"?: string }`
+
+Côté frontend, utilisez `getApiErrorMessage(err)` pour afficher un message sans risque de `[object Object]`.

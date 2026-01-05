@@ -180,7 +180,26 @@ export const apiAuth = authHttp;
 
 // --- Error handling ---
 export function getApiErrorMessage(err) {
+  const status = err?.response?.status;
+  const retryAfter = err?.response?.headers?.['retry-after'];
+
   const detail = err?.response?.data?.detail;
-  if (detail && typeof detail === 'object') return detail.message || 'Erreur API';
-  return detail || err?.response?.data?.message || err?.message || 'Erreur API';
+
+  if (detail && typeof detail === 'object') {
+    if (typeof detail.message === 'string' && detail.message.trim() !== '') return detail.message;
+    if (typeof detail.code === 'string' && detail.code.trim() !== '') return detail.code;
+    try {
+      return JSON.stringify(detail);
+    } catch {
+      return 'Erreur API';
+    }
+  }
+
+  if (typeof detail === 'string') return detail;
+
+  const msg = err?.response?.data?.message || err?.message;
+  const base = typeof msg === 'string' ? msg : 'Erreur API';
+
+  if (status === 429 && retryAfter) return `${base} (Retry-After: ${retryAfter}s)`;
+  return base;
 }

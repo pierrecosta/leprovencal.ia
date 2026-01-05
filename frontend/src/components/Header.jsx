@@ -34,7 +34,9 @@ export default function Header() {
               </button>
             </div>
           ) : (
-            <Link to="/login" className="nav-link">Login</Link>
+            <Link to="/login" className="nav-link" title="Se connecter">
+              Se connecter
+            </Link>
           )}
         </nav>
       </div>

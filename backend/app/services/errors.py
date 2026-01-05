@@ -1,5 +1,7 @@
 class ServiceError(Exception):
-    """Base class for service-level errors (no FastAPI dependency)."""
+    """Base class for service-level errors (no FastAPI dependency).
+    Note: stable API error codes are mapped at the route layer via http_error(...).
+    """
 
 
 class NotFoundError(ServiceError):
@@ -15,4 +17,8 @@ class UnauthorizedError(ServiceError):
 
 
 class ConflictError(ServiceError):
+    pass
+
+
+class RateLimitError(ServiceError):
     pass

@@ -28,10 +28,15 @@ export default function Login() {
     } catch (err) {
       const status = err?.response?.status;
       const backendMsg = getApiErrorMessage(err);
+      const msg = typeof backendMsg === 'string' ? backendMsg : '';
 
       setError(
-        backendMsg ||
-          (status === 401 ? 'Identifiants invalides.' : 'Erreur de connexion. Réessayez.')
+        msg ||
+          (status === 429
+            ? 'Trop de tentatives. Réessayez dans quelques instants.'
+            : status === 401
+              ? 'Identifiants invalides.'
+              : 'Erreur de connexion. Réessayez.')
       );
     } finally {
       setLoading(false);

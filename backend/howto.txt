@@ -28,3 +28,10 @@ Variables d'environnement (.env)
 
 	# Optionnel (CORS) - liste séparée par des virgules
 	ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
+
+	# Anti brute-force login (optionnel)
+	# LOGIN_WINDOW_SECONDS=300
+	# LOGIN_MAX_ATTEMPTS=5
+	# LOGIN_LOCKOUT_SECONDS=900
+	# LOGIN_BASE_DELAY_SECONDS=1
+	# LOGIN_MAX_DELAY_SECONDS=30

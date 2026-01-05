@@ -33,7 +33,7 @@ def get_article(article_id: int, db: Session = Depends(get_db)):
     try:
         return articles_service.get_article_service(db, article_id=article_id)
     except NotFoundError as e:
-        raise http_error(404, code="not_found", message=str(e), extra={"resource": "article", "id": article_id})
+        raise http_error(404, code="not_found", message=f"{e} (resource=article id={article_id})")
 
 
 # ✅ Créer un article (auth requis)
@@ -60,7 +60,7 @@ def update_article(
     try:
         return articles_service.update_article_service(db, article_id=article_id, article_in=article)
     except NotFoundError as e:
-        raise http_error(404, code="not_found", message=str(e), extra={"resource": "article", "id": article_id})
+        raise http_error(404, code="not_found", message=f"{e} (resource=article id={article_id})")
     except ValidationError as e:
         raise http_error(422, code="validation_error", message=str(e), field="titre")
 
@@ -76,4 +76,4 @@ def delete_article(
         articles_service.delete_article_service(db, article_id=article_id)
         return None
     except NotFoundError as e:
-        raise http_error(404, code="not_found", message=str(e), extra={"resource": "article", "id": article_id})
+        raise http_error(404, code="not_found", message=f"{e} (resource=article id={article_id})")

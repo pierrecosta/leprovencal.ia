@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, status, Query
 from sqlalchemy.orm import Session
 from typing import List, Optional
 
@@ -19,7 +19,7 @@ def get_dictionnaire(
     lettre: Optional[str] = Query(None),
     search: Optional[str] = Query(None),
     page: int = Query(1, ge=1),
-    limit: int = Query(20, ge=1, le=200),
+    limit: int = Query(20, ge=1, le=100),
     sort: str = Query("mots_francais"),
     order: str = Query("asc"),
     db: Session = Depends(get_db),
@@ -76,7 +76,7 @@ def update_mot(
     try:
         return dict_service.update_mot_service(db, mot_id=mot_id, mot_in=mot)
     except NotFoundError as e:
-        raise http_error(404, code="not_found", message=str(e), extra={"resource": "dictionnaire", "id": mot_id})
+        raise http_error(404, code="not_found", message=f"{e} (resource=dictionnaire id={mot_id})")
     except ValidationError as e:
         raise http_error(422, code="validation_error", message=str(e), field="motsFrancais")
 
@@ -88,5 +88,5 @@ def delete_mot(mot_id: int, db: Session = Depends(get_db), user: str = Depends(r
         dict_service.delete_mot_service(db, mot_id=mot_id)
         return None
     except NotFoundError as e:
-        raise http_error(404, code="not_found", message=str(e), extra={"resource": "dictionnaire", "id": mot_id})
+        raise http_error(404, code="not_found", message=f"{e} (resource=dictionnaire id={mot_id})")
 

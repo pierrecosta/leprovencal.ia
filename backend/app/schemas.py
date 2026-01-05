@@ -3,6 +3,8 @@ from typing import Optional
 from pydantic import BaseModel, ConfigDict, Field
 
 # --- camelCase aliases for the API (frontend) while keeping snake_case internally (backend/db) ---
+# Errors contract (HTTPException.detail): {"code": "...", "message": "...", "field": "optional"}
+# Common codes: validation_error, not_found, unauthorized, conflict, auth_required, auth_invalid, rate_limited
 def _to_camel(s: str) -> str:
     parts = s.split("_")
     return parts[0] + "".join(p[:1].upper() + p[1:] for p in parts[1:])

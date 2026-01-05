@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 from datetime import timedelta
-
 from sqlalchemy.orm import Session
+
+# NOTE: rate limiting (brute-force protection) is enforced at the route layer (/auth/login).
 
 from app.crud import users as users_crud
 from app.schemas import UserCreate

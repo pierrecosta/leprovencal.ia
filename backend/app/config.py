@@ -3,6 +3,8 @@ Central configuration for the backend.
 
 - Loads .env once
 - Provides typed settings via `settings`
+
+Note: login rate limiting env vars (LOGIN_* ) are read in app/routes/auth.py.
 """
 
 from __future__ import annotations

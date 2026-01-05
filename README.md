@@ -147,4 +147,10 @@ F.b : - Action 1: Ajouter rate limit sur les endpoints GET coûteux (ex: recherc
   3. Appeler un endpoint privé (ex: `GET /auth/me` ou `PUT /articles/{id}`) avec `Authorization: Bearer <token>`.
   4. Attendu : `401` + header `WWW-Authenticate: Bearer`.
 
+## Tests manuels (anti-abus)
+- Brute-force login :
+  1. Faire plusieurs tentatives de login avec un mauvais mot de passe (même username).
+  2. Attendu : `429 Too Many Requests` + header `Retry-After`.
+  3. Attendre le délai puis retenter.
+
 
