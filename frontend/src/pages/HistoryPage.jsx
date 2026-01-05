@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { getMenuHistoires, getHistoireById } from '../services/api';
 import Loader from '../components/Loader';
@@ -43,6 +42,9 @@ export default function HistoryPage() {
   };
 
   if (selected) {
+    const descriptionLongue = selected.descriptionLongue ?? selected.description_longue;
+    const sourceUrl = selected.sourceUrl ?? selected.source_url;
+
     return (
       <main className="max-w-5xl mx-auto p-6">
         <div className="mb-4">
@@ -67,14 +69,14 @@ export default function HistoryPage() {
             <Loader message="Chargement..." />
           ) : (
             <>
-              {selected.description_longue && (
+              {descriptionLongue && (
                 <p className="mb-4 whitespace-pre-line leading-relaxed">
-                  {selected.description_longue}
+                  {descriptionLongue}
                 </p>
               )}
-              {selected.source_url && (
+              {sourceUrl && (
                 <a
-                  href={selected.source_url}
+                  href={sourceUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-[var(--color-terra)] hover:underline text-sm"
@@ -114,7 +116,7 @@ export default function HistoryPage() {
 
           {Object.entries(menuData).map(([typologie, periodes]) => (
             <section key={typologie} className="border rounded bg-white shadow-sm">
-              <header className="px-4 py-3 border-b bg-[var(--color-bg)]">
+              <header className="px-4 py-3 border-b bg-[var(--bg)]">
                 <h3 className="font-bold text-xl text-[var(--color-lavender)]">
                   {typologie}
                 </h3>

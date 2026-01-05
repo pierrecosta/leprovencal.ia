@@ -1,4 +1,3 @@
-
 /* =====================================================================
    theme.css — Palette Provence + Tokens UI + Styles globaux
    ===================================================================== */
@@ -13,6 +12,17 @@
   --provence-sand: #797359;     /* Sable (fond clair) */
   --provence-lavender: #74648b; /* Lavande (secondaire) */
   --provence-plum: #4b3a5e;     /* Prune (titres/texte contrastés) */
+
+  /* NEW: alias variables (stable API for Tailwind/app code) */
+  --color-sage: var(--provence-sage);
+  --color-olive: var(--provence-olive);
+  --color-sand: var(--provence-sand);
+  --color-lavender: var(--provence-lavender);
+  --color-plum: var(--provence-plum);
+
+  /* NEW: “terra” token (documented example); optional accent for future use */
+  --provence-terra: #b85f3f;
+  --color-terra: var(--provence-terra);
 
   /* Couleurs dérivées / neutrales */
   --sand-50: #f9f4d7;   /* sable éclairci */

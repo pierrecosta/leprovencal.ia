@@ -1,4 +1,3 @@
-
 // services/api.js
 import axios from 'axios';
 
@@ -62,10 +61,42 @@ export const getHistoires = (params) => http.get(`/histoires`, { params });
 export const getMenuHistoires = () => http.get(`/histoires/menu`);
 export const getHistoireById = (id) => http.get(`/histoires/${id}`);
 export const findHistoire = (titre) =>
-  http.get(`/histoires/find`, { params: { titre: encodeURIComponent(titre) } });
+  http.get(`/histoires/find`, { params: { titre } });
 
 export const getHistoiresPaged = ({ page, limit }) =>
   http.get(`/histoires/paged`, { params: { page, limit } });
+
+// ==========================
+//    NORMALISATION PAYLOADS
+// ==========================
+function normalizeArticlePayload(payload = {}) {
+  // Canonique frontend: { titre, description, imageUrl, sourceUrl }
+  // Back-compat: { title, src, image_url, source_url }
+  return {
+    ...(payload.titre != null || payload.title != null ? { titre: payload.titre ?? payload.title } : {}),
+    ...(payload.description != null ? { description: payload.description } : {}),
+    ...(payload.imageUrl != null || payload.image_url != null || payload.src != null
+      ? { imageUrl: payload.imageUrl ?? payload.image_url ?? payload.src }
+      : {}),
+    ...(payload.sourceUrl != null || payload.source_url != null ? { sourceUrl: payload.sourceUrl ?? payload.source_url } : {}),
+  };
+}
+
+function normalizeDictionnairePayload(payload = {}) {
+  // Canonique frontend: camelCase (motsFrancais, motsProvencal, ...)
+  // Back-compat: snake_case
+  return {
+    ...(payload.theme != null ? { theme: payload.theme } : {}),
+    ...(payload.categorie != null ? { categorie: payload.categorie } : {}),
+    ...(payload.description != null ? { description: payload.description } : {}),
+    ...(payload.motsFrancais != null || payload.mots_francais != null ? { motsFrancais: payload.motsFrancais ?? payload.mots_francais } : {}),
+    ...(payload.motsProvencal != null || payload.mots_provencal != null ? { motsProvencal: payload.motsProvencal ?? payload.mots_provencal } : {}),
+    ...(payload.synonymesFrancais != null || payload.synonymes_francais != null ? { synonymesFrancais: payload.synonymesFrancais ?? payload.synonymes_francais } : {}),
+    ...(payload.egProvencal != null || payload.eg_provencal != null ? { egProvencal: payload.egProvencal ?? payload.eg_provencal } : {}),
+    ...(payload.dProvencal != null || payload.d_provencal != null ? { dProvencal: payload.dProvencal ?? payload.d_provencal } : {}),
+    ...(payload.aProvencal != null || payload.a_provencal != null ? { aProvencal: payload.aProvencal ?? payload.a_provencal } : {}),
+  };
+}
 
 // ==========================
 //    UPDATED SERVICES
@@ -73,8 +104,7 @@ export const getHistoiresPaged = ({ page, limit }) =>
 
 // --- Dictionnaire: update d'un mot (ligne du tableau)
 export async function updateMot(id, payload) {
-  // payload: { theme?, categorie?, mots_francais?, mots_provencal?, description?, synonymes_francais?, eg_provencal?, d_provencal?, a_provencal? }
-  const { data } = await apiAuth.put(`/dictionnaire/${id}`, payload, {
+  const { data } = await authHttp.put(`/dictionnaire/${id}`, normalizeDictionnairePayload(payload), {
     headers: { 'Content-Type': 'application/json' },
   });
   return data;
@@ -82,8 +112,7 @@ export async function updateMot(id, payload) {
 
 // --- Articles: update d'une carte/article
 export async function updateArticle(id, payload) {
-  // payload: { title?, src?, ... }
-  const { data } = await apiAuth.put(`/articles/${id}`, payload, {
+  const { data } = await authHttp.put(`/articles/${id}`, normalizeArticlePayload(payload), {
     headers: { 'Content-Type': 'application/json' },
   });
   return data;
@@ -145,5 +174,12 @@ export function logout() {
 // ==========================
 //    EXPORTS UTILES PAR DÉFAUT
 // ==========================
-export const api = http;     // instance publique
-export const apiAuth = authHttp; // instance avec interceptor Bearer
+export const api = http;
+export const apiAuth = authHttp;
+
+// --- Error handling ---
+export function getApiErrorMessage(err) {
+  const detail = err?.response?.data?.detail;
+  if (detail && typeof detail === 'object') return detail.message || 'Erreur API';
+  return detail || err?.response?.data?.message || err?.message || 'Erreur API';
+}

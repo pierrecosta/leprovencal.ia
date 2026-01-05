@@ -11,6 +11,7 @@ from jose import JWTError, jwt
 from passlib.context import CryptContext
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
+from app.utils.http_errors import http_error
 
 # --- central config ---
 try:
@@ -84,8 +85,7 @@ def decode_access_token(token: str) -> Optional[Dict[str, str]]:
     Décode un token JWT et retourne le payload si valide, sinon None.
     """
     try:
-        payload = jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
-        return payload
+        return jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
     except JWTError:
         return None
 
@@ -100,17 +100,19 @@ def require_authenticated(token: Optional[str] = Depends(oauth2_scheme)) -> str:
     Retourne le username (sub).
     """
     if not token:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Authentification requise",
+        raise http_error(
+            status.HTTP_401_UNAUTHORIZED,
+            code="auth_required",
+            message="Authentification requise",
             headers={"WWW-Authenticate": "Bearer"},
         )
 
     payload = decode_access_token(token)
     if payload is None or "sub" not in payload:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Authentification requise (token invalide ou expiré)",
+        raise http_error(
+            status.HTTP_401_UNAUTHORIZED,
+            code="auth_invalid",
+            message="Authentification requise (token invalide ou expiré)",
             headers={"WWW-Authenticate": "Bearer"},
         )
     return payload["sub"]

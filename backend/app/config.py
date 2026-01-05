@@ -34,6 +34,7 @@ class Settings:
     secret_key: str
     algorithm: str
     access_token_expire_minutes: int
+    log_level: str  # NEW
 
 
 ENV = (_env("ENV", "development") or "development").lower()
@@ -49,4 +50,5 @@ settings = Settings(
     secret_key=_secret,
     algorithm=_env("ALGORITHM", "HS256") or "HS256",
     access_token_expire_minutes=_env_int("ACCESS_TOKEN_EXPIRE_MINUTES", 30),
+    log_level=(_env("LOG_LEVEL", "INFO") or "INFO").upper(),
 )

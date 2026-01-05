@@ -1,4 +1,3 @@
-
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [
@@ -8,33 +7,35 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // Palette Provence
-        provencesage: "#7f9b8d",
-        provenceolive: "#c0cd49",
-        provencesand:  "#efe4ac",
-        provencelavender: "#9985b6",
-        provenceplum: "#4b3a5e",
+        // Source de vérité: frontend/src/theme.css (variables CSS)
+        provencesage: "var(--provence-sage)",
+        provenceolive: "var(--provence-olive)",
+        provencesand: "var(--provence-sand)",
+        provencelavender: "var(--provence-lavender)",
+        provenceplum: "var(--provence-plum)",
 
-        // Surfaces et bordures
-        surface: "#f7f1c8",
-        surfaceContrast: "#e6dca2",
-        borderProvence: "#ddcf9f",
+        surface: "var(--surface)",
+        surfaceContrast: "var(--surface-contrast)",
+        borderProvence: "var(--border)",
 
-        // Alias pratiques (pour utiliser bg-primary, text-accent, etc.)
-        primary: "#4b3a5e",
-        primaryContrast: "#f8f6fb",
-        secondary: "#9985b6",
-        accent: "#c0cd49",
-        bg: "#efe4ac",
-        text: "#4b3a5e",
+        primary: "var(--primary)",
+        primaryContrast: "var(--primary-contrast)",
+        secondary: "var(--secondary)",
+        accent: "var(--accent)",
+        bg: "var(--bg)",
+        text: "var(--text)",
+        heading: "var(--heading)",
+        muted: "var(--text-muted)",
+        link: "var(--link)",
+        linkHover: "var(--link-hover)",
       },
       boxShadow: {
-        "sm-provence": "0 4px 12px rgba(75, 58, 94, 0.10)",
-        "md-provence": "0 8px 20px rgba(75, 58, 94, 0.12)",
-        "lg-provence": "0 12px 28px rgba(75, 58, 94, 0.18)",
+        "sm-provence": "var(--shadow-sm)",
+        "md-provence": "var(--shadow-md)",
+        "lg-provence": "var(--shadow-lg)",
       },
       borderRadius: {
-        provence: "14px",
+        provence: "var(--radius)",
       },
       container: {
         center: true,

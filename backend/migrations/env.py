@@ -1,4 +1,5 @@
 from logging.config import fileConfig
+import logging
 
 from alembic import context
 from sqlalchemy import engine_from_config, pool
@@ -16,14 +17,18 @@ if config.config_file_name is not None:
 # Définition de la MetaData pour autogenerate
 target_metadata = Base.metadata
 
+logger = logging.getLogger(__name__)
+
 def run_migrations_offline():
     """Run migrations in 'offline' mode."""
+    logger.info("Running migrations (offline)")
     url = config.get_main_option("sqlalchemy.url")
     context.configure(
         url=url,
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
+        compare_type=True,
     )
 
     with context.begin_transaction():
@@ -32,6 +37,7 @@ def run_migrations_offline():
 
 def run_migrations_online():
     """Run migrations in 'online' mode."""
+    logger.info("Running migrations (online)")
     connectable = engine_from_config(
         config.get_section(config.config_ini_section),
         prefix="sqlalchemy.",
@@ -42,6 +48,7 @@ def run_migrations_online():
         context.configure(
             connection=connection,
             target_metadata=target_metadata,
+            compare_type=True,
         )
 
         with context.begin_transaction():

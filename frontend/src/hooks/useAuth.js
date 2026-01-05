@@ -1,4 +1,3 @@
-
 // hooks/useAuth.js
 import { useEffect, useState, useCallback } from 'react';
 import { getMe, getToken, clearToken } from '../services/api';
@@ -17,7 +16,9 @@ export function useAuth() {
       try {
         const me = await getMe();
         setUser(me);
-      } catch {
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.warn('[auth] invalid token, clearing', err?.response?.status);
         setUser(null);
         clearToken();
       } finally {
@@ -26,14 +27,9 @@ export function useAuth() {
     })();
   }, []);
 
-  
-const logout = useCallback(async () => {
+  const logout = useCallback(async () => {
     try {
-      // Si ton backend a un endpoint de logout (optionnel)
-      // await postLogout();
-
-      // On purge le token côté client
-      clearToken?.();
+      clearToken();
     } finally {
       setUser(null);
     }

@@ -1,4 +1,3 @@
-
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Header from './components/Header';
 import Footer from './components/Footer';
@@ -8,7 +7,6 @@ import GeographyPage from './pages/GeographyPage';
 import HistoryPage from './pages/HistoryPage';
 import Login from './pages/LoginPage';
 import './App.css';
-import './theme.css';
 
 function App() {
   return (
@@ -17,7 +15,7 @@ function App() {
       <Header />
 
       {/* Contenu principal */}
-      <main className="max-w-6xl mx-auto p-6 bg-[var(--color-bg)] min-h-screen">
+      <main className="max-w-6xl mx-auto p-6 bg-bg min-h-screen">
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/langue-dictionnaire" element={<DictionaryPage />} />

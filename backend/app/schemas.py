@@ -1,54 +1,129 @@
-
-from pydantic import BaseModel
 from typing import Optional
 
-class UserCreate(BaseModel):
-    username: str
-    password: str
+from pydantic import BaseModel, ConfigDict, Field
 
-class UserResponse(BaseModel):
+# --- camelCase aliases for the API (frontend) while keeping snake_case internally (backend/db) ---
+def _to_camel(s: str) -> str:
+    parts = s.split("_")
+    return parts[0] + "".join(p[:1].upper() + p[1:] for p in parts[1:])
+
+
+class APIModel(BaseModel):
+    # API outputs use camelCase aliases; errors use HTTPException.detail as {code,message,field?}.
+    model_config = ConfigDict(
+        populate_by_name=True,
+        from_attributes=True,
+        alias_generator=_to_camel,
+    )
+
+
+class UserCreate(APIModel):
+    username: str = Field(min_length=1)
+    password: str = Field(min_length=1)
+
+
+class UserResponse(APIModel):
     id: int
     username: str
 
-    class Config:
-        from_attributes = True
 
-class ArticleBase(BaseModel):
+# ==========================
+# Articles (Create/Update/Out)
+# ==========================
+class ArticleCreate(APIModel):
+    titre: str = Field(min_length=1)
+    description: Optional[str] = None
+    image_url: Optional[str] = None
+    source_url: Optional[str] = None
+
+
+class ArticleUpdate(APIModel):
+    titre: Optional[str] = None
+    description: Optional[str] = None
+    image_url: Optional[str] = None
+    source_url: Optional[str] = None
+
+
+class ArticleOut(APIModel):
+    id: int
     titre: str
-    description: str
-    image_url: Optional[str]
-    source_url: Optional[str]
+    description: Optional[str] = None
+    image_url: Optional[str] = None
+    source_url: Optional[str] = None
 
-class ArticleCreate(ArticleBase):
-    pass
 
-class ArticleResponse(ArticleBase):
+# Back-compat (imports existants)
+ArticleResponse = ArticleOut
+
+
+# ==========================
+# Dictionnaire (Create/Update/Out)
+# ==========================
+class DictionnaireCreate(APIModel):
+    mots_francais: str = Field(min_length=1)  # requis (cohérent avec NOT NULL)
+    synonymes_francais: Optional[str] = None
+    mots_provencal: Optional[str] = None
+    eg_provencal: Optional[str] = None
+    d_provencal: Optional[str] = None
+    a_provencal: Optional[str] = None
+    h_provencal: Optional[str] = None
+    av_provencal: Optional[str] = None
+    p_provencal: Optional[str] = None
+    x_provencal: Optional[str] = None
+    theme: Optional[str] = None
+    categorie: Optional[str] = None
+    description: Optional[str] = None
+
+
+class DictionnaireUpdate(APIModel):
+    # PATCH-like: tout optionnel
+    mots_francais: Optional[str] = None
+    synonymes_francais: Optional[str] = None
+    mots_provencal: Optional[str] = None
+    eg_provencal: Optional[str] = None
+    d_provencal: Optional[str] = None
+    a_provencal: Optional[str] = None
+    h_provencal: Optional[str] = None
+    av_provencal: Optional[str] = None
+    p_provencal: Optional[str] = None
+    x_provencal: Optional[str] = None
+    theme: Optional[str] = None
+    categorie: Optional[str] = None
+    description: Optional[str] = None
+
+
+class DictionnaireOut(DictionnaireCreate):
     id: int
-    class Config:
-        from_attributes = True
 
-class DictionnaireBase(BaseModel):
-    mots_francais: str
-    synonymes_francais: Optional[str]
-    mots_provencal: Optional[str]
-    theme: Optional[str]
-    categorie: Optional[str]
-    description: Optional[str]
 
-class DictionnaireOut(DictionnaireBase):
+# Back-compat (imports existants)
+DictionnaireBase = DictionnaireCreate
+
+
+# ==========================
+# Histoires (Create/Update/Out + back-compat)
+# ==========================
+class HistoireCreate(APIModel):
+    titre: str = Field(min_length=1)
+    typologie: str = Field(min_length=1)
+    periode: str = Field(min_length=1)
+    description_courte: Optional[str] = None
+    description_longue: Optional[str] = None
+    source_url: Optional[str] = None
+
+
+class HistoireUpdate(APIModel):
+    titre: Optional[str] = None
+    typologie: Optional[str] = None
+    periode: Optional[str] = None
+    description_courte: Optional[str] = None
+    description_longue: Optional[str] = None
+    source_url: Optional[str] = None
+
+
+class HistoireOut(HistoireCreate):
     id: int
-    class Config:
-        from_attributes = True
 
-class HistoireBase(BaseModel):
-    titre: str
-    typologie: str
-    periode: str
-    description_courte: str
-    description_longue: str
-    source_url: Optional[str]
 
-class HistoireOut(HistoireBase):
-    id: int
-    class Config:
-        from_attributes = True
+# Back-compat: certains modules importent encore HistoireBase
+HistoireBase = HistoireCreate

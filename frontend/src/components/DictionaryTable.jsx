@@ -1,34 +1,42 @@
-
 export default function DictionaryTable({ mots, sort, order, onSort }) {
   const sortIcon = (column) => (sort === column ? (order === 'asc' ? '▲' : '▼') : '');
 
+  const get = (m, camel, snake) => m?.[camel] ?? m?.[snake];
+
   return (
     <div className="overflow-x-auto">
-      <table className="w-full border-collapse border">
+      <table className="table">
         <thead>
-          <tr className="bg-gray-200">
-            {['theme', 'categorie', 'mots_francais', 'mots_provencal'].map(col => (
-              <th key={col} className="border p-2 cursor-pointer" onClick={() => onSort(col)}>
+          <tr>
+            {['theme', 'categorie', 'mots_francais', 'mots_provencal'].map((col) => (
+              <th key={col} className="cursor-pointer" onClick={() => onSort(col)}>
                 {col} {sortIcon(col)}
               </th>
             ))}
-            <th className="border p-2">Description</th>
-            <th className="border p-2">Synonymes</th>
-            <th className="border p-2">Sources</th>
+            <th>Description</th>
+            <th>Synonymes</th>
+            <th>Sources</th>
           </tr>
         </thead>
         <tbody>
-          {mots.map(m => (
-            <tr key={m.id}>
-              <td className="border p-2">{m.theme}</td>
-              <td className="border p-2">{m.categorie}</td>
-              <td className="border p-2">{m.mots_francais}</td>
-              <td className="border p-2">{m.mots_provencal}</td>
-              <td className="border p-2">{m.description}</td>
-              <td className="border p-2">{m.synonymes_francais}</td>
-              <td className="border p-2 text-sm text-gray-600">{m.eg_provencal}, {m.d_provencal}, {m.a_provencal}</td>
-            </tr>
-          ))}
+          {mots.map((m) => {
+            const eg = get(m, 'egProvencal', 'eg_provencal');
+            const d = get(m, 'dProvencal', 'd_provencal');
+            const a = get(m, 'aProvencal', 'a_provencal');
+            const sources = [eg, d, a].filter(Boolean).join(', ');
+
+            return (
+              <tr key={m.id}>
+                <td>{get(m, 'theme', 'theme')}</td>
+                <td>{get(m, 'categorie', 'categorie')}</td>
+                <td>{get(m, 'motsFrancais', 'mots_francais')}</td>
+                <td>{get(m, 'motsProvencal', 'mots_provencal')}</td>
+                <td>{get(m, 'description', 'description')}</td>
+                <td>{get(m, 'synonymesFrancais', 'synonymes_francais')}</td>
+                <td className="text-sm text-muted">{sources}</td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>

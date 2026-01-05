@@ -1,5 +1,7 @@
 import subprocess
 import sys
+import os
+import logging
 from sqlalchemy import create_engine
 from sqlalchemy.exc import OperationalError
 
@@ -7,36 +9,42 @@ from app.core.config import get_settings
 
 settings = get_settings()
 
+logging.basicConfig(
+    level=os.getenv("LOG_LEVEL", "INFO").upper(),
+    format="%(asctime)s %(levelname)s %(name)s - %(message)s",
+)
+logger = logging.getLogger("init_app")
+
 def check_db_connection():
-    print("🔍 Vérification de la connexion à la base...")
+    logger.info("Vérification de la connexion à la base...")
     try:
         engine = create_engine(settings.database_url, pool_pre_ping=True, future=True)
         with engine.connect():
-            print("✅ Connexion à la base réussie !")
-    except OperationalError as e:
-        print("❌ Impossible de se connecter à la base :", e)
+            logger.info("Connexion à la base réussie.")
+    except OperationalError:
+        logger.exception("Impossible de se connecter à la base.")
         sys.exit(1)
 
 def run_alembic_migrations():
-    print("⚙️ Application des migrations Alembic...")
+    logger.info("Application des migrations Alembic...")
     result = subprocess.run(["alembic", "upgrade", "head"])
     if result.returncode == 0:
-        print("✅ Migrations appliquées avec succès !")
+        logger.info("Migrations appliquées avec succès.")
     else:
-        print("❌ Erreur lors des migrations.")
+        logger.error("Erreur lors des migrations (code=%s).", result.returncode)
         sys.exit(1)
 
 def run_seeds():
-    print("🌱 Insertion des données initiales...")
+    logger.info("Insertion des données initiales (seeds)...")
     result = subprocess.run([sys.executable, "-m", "seeds.seed_all"])
     if result.returncode == 0:
-        print("✅ Seeds exécutés avec succès !")
+        logger.info("Seeds exécutés avec succès.")
     else:
-        print("❌ Erreur lors de l'exécution des seeds.")
+        logger.error("Erreur lors de l'exécution des seeds (code=%s).", result.returncode)
         sys.exit(1)
 
 if __name__ == "__main__":
-    print("🚀 Initialisation complète du projet...")
+    logger.info("Initialisation complète du projet...")
     check_db_connection()
     run_alembic_migrations()
     run_seeds()

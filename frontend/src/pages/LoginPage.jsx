@@ -1,4 +1,3 @@
-
 // pages/Login.jsx
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -27,16 +26,25 @@ export default function Login() {
       // Rediriger après login
       navigate('/');
     } catch (err) {
-      console.error(err);
-      setError('Identifiants invalides ou erreur de connexion.');
+      const status = err?.response?.status;
+      const detail = err?.response?.data?.detail;
+      const backendMsg = detail && typeof detail === 'object' ? detail.message : detail;
+
+      // eslint-disable-next-line no-console
+      console.error('[login]', { status, err });
+
+      setError(
+        backendMsg ||
+          (status === 401 ? 'Identifiants invalides.' : 'Erreur de connexion. Réessayez.')
+      );
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="max-w-md mx-auto mt-10 bg-white shadow p-6 rounded">
-      <h2 className="text-2xl font-bold mb-4 text-[var(--color-lavender)]">Se connecter</h2>
+    <div className="max-w-md mx-auto mt-10 provence-card bg-white">
+      <h2 className="text-2xl font-bold mb-4 text-secondary">Se connecter</h2>
       <form onSubmit={onSubmit} className="space-y-4">
         <div>
           <label className="block mb-1 font-medium">Nom d’utilisateur</label>
@@ -45,7 +53,7 @@ export default function Login() {
             name="username"
             value={form.username}
             onChange={onChange}
-            className="w-full border rounded px-3 py-2"
+            className="input"
             placeholder="votre pseudo"
             required
           />
@@ -57,7 +65,7 @@ export default function Login() {
             name="password"
             value={form.password}
             onChange={onChange}
-            className="w-full border rounded px-3 py-2"
+            className="input"
             placeholder="••••••••"
             required
           />
@@ -65,11 +73,7 @@ export default function Login() {
 
         {error && <p className="text-red-600">{error}</p>}
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full bg-[var(--color-lavender)] text-white px-4 py-2 rounded hover:opacity-90 transition disabled:opacity-50"
-        >
+        <button type="submit" disabled={loading} className="btn btn-primary w-full disabled:opacity-50">
           {loading ? 'Connexion...' : 'Login'}
         </button>
       </form>
