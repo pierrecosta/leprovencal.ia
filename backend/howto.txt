@@ -14,3 +14,8 @@ Initialisation de l'environnement
 	python -m venv venv
 	source venv/bin/activate
 	python -m pip install -r requirements.txt
+
+Variables d'environnement (.env)
+	DATABASE_URL=postgresql+psycopg2://myuser:mypassword@localhost:5432/provencal_db
+	# Optionnel (CORS) - liste séparée par des virgules
+	ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000

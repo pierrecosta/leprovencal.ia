@@ -1,11 +1,10 @@
-
 from logging.config import fileConfig
-from sqlalchemy import engine_from_config, pool
-from alembic import context
 
-# Import de la base et des modèles
+from alembic import context
+from sqlalchemy import engine_from_config, pool
+
 from app.database import Base
-from app.models import Article, Dictionnaire, Histoire  # Assurez-vous d'importer vos modèles
+import app.models  # noqa: F401  (ensures models are registered on Base.metadata)
 
 # Configuration Alembic
 config = context.config

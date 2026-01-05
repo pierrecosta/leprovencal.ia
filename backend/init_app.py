@@ -1,20 +1,17 @@
-
 import subprocess
 import sys
 from sqlalchemy import create_engine
 from sqlalchemy.exc import OperationalError
-import os
-from dotenv import load_dotenv
 
-# Charger les variables d'environnement
-load_dotenv()
-DATABASE_URL = os.getenv("DATABASE_URL")
+from app.core.config import get_settings
+
+settings = get_settings()
 
 def check_db_connection():
     print("🔍 Vérification de la connexion à la base...")
     try:
-        engine = create_engine(DATABASE_URL)
-        with engine.connect() as conn:
+        engine = create_engine(settings.database_url, pool_pre_ping=True, future=True)
+        with engine.connect():
             print("✅ Connexion à la base réussie !")
     except OperationalError as e:
         print("❌ Impossible de se connecter à la base :", e)
