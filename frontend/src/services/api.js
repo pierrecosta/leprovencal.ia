@@ -115,6 +115,47 @@ function normalizeMotOut(m = {}) {
   };
 }
 
+// --- Histoires: response normalizers (menu + détail) ---
+function normalizeHistoireOut(h = {}) {
+  return {
+    ...h,
+    descriptionCourte: h.descriptionCourte ?? h.description_courte ?? '',
+    descriptionLongue: h.descriptionLongue ?? h.description_longue ?? '',
+    sourceUrl: h.sourceUrl ?? h.source_url ?? '',
+    // titre/typologie/periode are already camelCase in API (but keep as-is)
+  };
+}
+
+function normalizeMenuItemOut(item = {}) {
+  return {
+    ...item,
+    descriptionCourte: item.descriptionCourte ?? item.description_courte ?? '',
+  };
+}
+
+/**
+ * Shape attendu:
+ * {
+ *   [typologie]: {
+ *     [periode]: [{ id, titre, descriptionCourte }]
+ *   }
+ * }
+ */
+function normalizeMenuHistoiresOut(menu = {}) {
+  if (!menu || typeof menu !== 'object') return {};
+
+  const out = {};
+  for (const [typologie, periodes] of Object.entries(menu)) {
+    const periodesObj = periodes && typeof periodes === 'object' ? periodes : {};
+    out[typologie] = {};
+
+    for (const [periode, items] of Object.entries(periodesObj)) {
+      out[typologie][periode] = Array.isArray(items) ? items.map(normalizeMenuItemOut) : [];
+    }
+  }
+  return out;
+}
+
 // ==========================
 //        AXIOS INSTANCES
 // ==========================
