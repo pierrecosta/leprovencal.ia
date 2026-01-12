@@ -106,6 +106,7 @@ function normalizeArticleOut(a = {}) {
     ...a,
     imageUrl: a.imageUrl ?? a.image_url ?? a.src ?? '',
     sourceUrl: a.sourceUrl ?? a.source_url ?? '',
+    imageStored: a.imageStored ?? a.image_stored ?? false,
   };
 }
 
@@ -137,6 +138,25 @@ function normalizeMenuItemOut(item = {}) {
   return {
     ...item,
     descriptionCourte: item.descriptionCourte ?? item.description_courte ?? '',
+  };
+}
+
+// --- Cartes (Géographie): response normalizers ---
+function normalizeCarteOut(c = {}) {
+  return {
+    ...c,
+    iframeUrl: c.iframeUrl ?? c.iframe_url ?? '',
+    // legende/titre are camelCase already via API aliases, but keep back-compat
+    legende: c.legende ?? c.legende ?? '',
+    imageStored: c.imageStored ?? c.image_stored ?? false,
+  };
+}
+
+function normalizeCartePayload(payload = {}) {
+  return {
+    ...(payload.titre != null ? { titre: payload.titre } : {}),
+    ...(payload.iframeUrl != null || payload.iframe_url != null ? { iframeUrl: payload.iframeUrl ?? payload.iframe_url } : {}),
+    ...(payload.legende != null ? { legende: payload.legende } : {}),
   };
 }
 
@@ -251,6 +271,90 @@ export const findHistoire = (titre) =>
   }));
 
 export const getHistoiresPaged = ({ page, limit }) => http.get(`/histoires/paged`, { params: { page, limit } });
+
+// --- Histoires (CRUD) (authenticated) ---
+export async function createHistoire(payload) {
+  const { data } = await authHttp.post(`/histoires`, payload, {
+    headers: { 'Content-Type': 'application/json' },
+  });
+  return normalizeHistoireOut(data);
+}
+
+export async function updateHistoire(id, payload) {
+  const { data } = await authHttp.put(`/histoires/${id}`, payload, {
+    headers: { 'Content-Type': 'application/json' },
+  });
+  return normalizeHistoireOut(data);
+}
+
+export async function deleteHistoire(id) {
+  const res = await authHttp.delete(`/histoires/${id}`);
+  return res;
+}
+
+// --- Cartes (Géographie) (public + authenticated mutations) ---
+export const getCartes = (params) =>
+  http.get(`/cartes`, { params }).then((res) => ({
+    ...res,
+    data: Array.isArray(res.data) ? res.data.map(normalizeCarteOut) : res.data,
+  }));
+
+export async function createCarte(payload) {
+  const { data } = await authHttp.post(`/cartes`, normalizeCartePayload(payload), {
+    headers: { 'Content-Type': 'application/json' },
+  });
+  return normalizeCarteOut(data);
+}
+
+export async function updateCarte(id, payload) {
+  const { data } = await authHttp.put(`/cartes/${id}`, normalizeCartePayload(payload), {
+    headers: { 'Content-Type': 'application/json' },
+  });
+  return normalizeCarteOut(data);
+}
+
+export async function deleteCarte(id) {
+  const res = await authHttp.delete(`/cartes/${id}`);
+  return res;
+}
+
+// ==========================
+//   STORED IMAGES (BINARY)
+// ==========================
+
+export function getArticleImageUrl(id, cacheBuster) {
+  const qs = cacheBuster ? `?v=${encodeURIComponent(String(cacheBuster))}` : '';
+  return `${API_BASE}/articles/${id}/image${qs}`;
+}
+
+export function getCarteImageUrl(id, cacheBuster) {
+  const qs = cacheBuster ? `?v=${encodeURIComponent(String(cacheBuster))}` : '';
+  return `${API_BASE}/cartes/${id}/image${qs}`;
+}
+
+export async function uploadArticleImage(id, file) {
+  const fd = new FormData();
+  fd.append('image', file);
+  const { data } = await authHttp.put(`/articles/${id}/image`, fd);
+  return normalizeArticleOut(data);
+}
+
+export async function deleteArticleImage(id) {
+  const { data } = await authHttp.delete(`/articles/${id}/image`);
+  return normalizeArticleOut(data);
+}
+
+export async function uploadCarteImage(id, file) {
+  const fd = new FormData();
+  fd.append('image', file);
+  const { data } = await authHttp.put(`/cartes/${id}/image`, fd);
+  return normalizeCarteOut(data);
+}
+
+export async function deleteCarteImage(id) {
+  const { data } = await authHttp.delete(`/cartes/${id}/image`);
+  return normalizeCarteOut(data);
+}
 
 // --- Dictionnaire: update d'un mot (ligne du tableau)
 export async function updateMot(id, payload) {

@@ -8,7 +8,11 @@
   min-height: 100vh;
   background: var(--bg);
   color: var(--text);
+  position: relative;
+  overflow-x: hidden;
 }
+
+/* Pas d'effets de fond animés (plus sobre) */
 
 /* Barre de navigation (styles de base dans theme.css) */
 .App .navbar {
@@ -34,31 +38,37 @@
   pointer-events: none;
   filter: drop-shadow(var(--filter-drop-shadow-md));
   color: var(--accent);
-  transition: transform 0.2s ease, filter 0.2s ease;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .App-logo:hover {
-  transform: scale(1.02);
-  filter: drop-shadow(var(--filter-drop-shadow-lg));
+  transform: scale(1.05) rotate(5deg);
+  filter: drop-shadow(var(--filter-drop-shadow-lg)) brightness(1.1);
 }
 
 @media (prefers-reduced-motion: no-preference) {
   .App-logo {
-    animation: App-logo-spin infinite 20s linear;
+    animation: App-logo-float infinite 6s ease-in-out;
   }
 }
 
-@keyframes App-logo-spin {
-  from { transform: rotate(0deg); }
-  to   { transform: rotate(360deg); }
+@keyframes App-logo-float {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  25% { transform: translateY(-10px) rotate(2deg); }
+  50% { transform: translateY(0) rotate(0deg); }
+  75% { transform: translateY(-10px) rotate(-2deg); }
 }
+
+/* Pas d'animation globale d'entrée (plus rapide et sobre) */
 
 /* Pied de page léger */
 .App-footer {
   margin-top: 2rem;
-  padding: 1rem 0;
+  padding: 1.5rem 0;
   color: var(--text-muted);
-  border-top: 1px solid var(--border);
+  border-top: 2px solid transparent;
+  background: var(--bg);
+  position: relative;
 }
 
 /* Liens du pied de page */

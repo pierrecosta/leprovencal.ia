@@ -2,7 +2,9 @@
 import { useMemo, useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import ApiAlert from './ApiAlert';
-import { getApiErrorMessage, updateArticle, deleteArticle } from '../services/api';
+import { deleteArticle, deleteArticleImage, getApiErrorMessage, getArticleImageUrl, updateArticle, uploadArticleImage } from '../services/api';
+
+const MAX_IMAGE_BYTES = 2 * 1024 * 1024;
 
 export default function ArticleCard({
   id,
@@ -10,6 +12,8 @@ export default function ArticleCard({
   description,
   imageUrl,
   image_url, // back-compat (should disappear once API normalization is everywhere)
+  imageStored,
+  image_stored,
   sourceUrl,
   source_url, // back-compat
   onUpdated,
@@ -22,6 +26,7 @@ export default function ArticleCard({
     description,
     imageUrl: imageUrl ?? image_url ?? '',
     sourceUrl: sourceUrl ?? source_url ?? '',
+    imageStored: imageStored ?? image_stored ?? false,
   };
 
   const [view, setView] = useState(initial);
@@ -31,6 +36,9 @@ export default function ArticleCard({
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState(null);
 
+  const [imageFile, setImageFile] = useState(null);
+  const [imageRev, setImageRev] = useState(0);
+
   const [deleting, setDeleting] = useState(false);
 
   const hasChanges = useMemo(() => {
@@ -38,9 +46,10 @@ export default function ArticleCard({
       form.titre !== view.titre ||
       form.description !== view.description ||
       form.imageUrl !== view.imageUrl ||
-      form.sourceUrl !== view.sourceUrl
+      form.sourceUrl !== view.sourceUrl ||
+      Boolean(imageFile)
     );
-  }, [form, view]);
+  }, [form, view, imageFile]);
 
   const isValidUrl = (u) => {
     if (!u) return true;
@@ -50,12 +59,14 @@ export default function ArticleCard({
   const startEdit = () => {
     setErrorMsg(null);
     setForm({ ...view });
+    setImageFile(null);
     setIsEditing(true);
   };
 
   const cancelEdit = () => {
     setErrorMsg(null);
     setForm({ ...view });
+    setImageFile(null);
     setIsEditing(false);
   };
 
@@ -80,14 +91,28 @@ export default function ArticleCard({
         sourceUrl: form.sourceUrl?.trim() ?? '',
       };
 
-      const data = await updateArticle(id, payload);
+      const updated = await updateArticle(id, payload);
 
-      // Keep UI canonical/trimmed
-      setView({ ...payload });
-      setForm({ ...payload });
+      let final = {
+        ...payload,
+        imageStored: Boolean(updated?.imageStored),
+      };
+
+      if (imageFile) {
+        const afterUpload = await uploadArticleImage(id, imageFile);
+        final = {
+          ...final,
+          imageStored: Boolean(afterUpload?.imageStored),
+        };
+        setImageRev((n) => n + 1);
+        setImageFile(null);
+      }
+
+      setView(final);
+      setForm(final);
       setIsEditing(false);
 
-      if (typeof onUpdated === 'function') onUpdated(data);
+      if (typeof onUpdated === 'function') onUpdated(updated);
     } catch (err) {
       setErrorMsg(getApiErrorMessage(err) || "Une erreur est survenue lors de la mise à jour.");
     } finally {
@@ -106,7 +131,7 @@ export default function ArticleCard({
             <button
               type="button"
               onClick={startEdit}
-              className="px-3 py-1.5 rounded bg-[var(--color-terra)] text-black hover:opacity-90"
+              className="btn btn-primary"
             >
               Éditer
             </button>
@@ -116,7 +141,7 @@ export default function ArticleCard({
                 type="button"
                 onClick={cancelEdit}
                 disabled={loading}
-                className="px-3 py-1.5 rounded border border-gray-300 text-green hover:bg-gray-50 disabled:opacity-80"
+                className="btn btn-secondary disabled:opacity-80"
               >
                 Annuler
               </button>
@@ -124,7 +149,7 @@ export default function ArticleCard({
                 type="button"
                 onClick={handleSave}
                 disabled={loading || !hasChanges}
-                className="px-3 py-1.5 rounded bg-[var(--color-lavender)] text-red hover:opacity-90 disabled:opacity-80"
+                className="btn btn-primary disabled:opacity-80"
               >
                 {loading ? 'Enregistrement…' : 'Valider'}
               </button>
@@ -146,7 +171,7 @@ export default function ArticleCard({
                 }
               }}
               disabled={deleting}
-              className="px-3 py-1.5 rounded bg-red-600 text-white hover:opacity-90"
+              className="btn btn-danger"
             >
               {deleting ? 'Suppression…' : 'Supprimer'}
             </button>
@@ -159,11 +184,21 @@ export default function ArticleCard({
         {/* Image */}
         <div className="w-full md:w-32">
           {!isEditing ? (
-            <img
-              src={view.imageUrl}
-              alt={`Illustration de ${view.titre}`}
-              className="w-full md:w-32 h-32 object-cover rounded"
-            />
+            view.imageStored ? (
+              <img
+                src={getArticleImageUrl(id, imageRev)}
+                alt={`Illustration de ${view.titre}`}
+                className="w-full md:w-32 h-32 object-cover rounded"
+              />
+            ) : view.imageUrl ? (
+              <img
+                src={view.imageUrl}
+                alt={`Illustration de ${view.titre}`}
+                className="w-full md:w-32 h-32 object-cover rounded"
+              />
+            ) : (
+              <div className="w-full md:w-32 h-32 rounded bg-gray-100" />
+            )
           ) : (
             <div className="flex flex-col gap-2">
               <label className="text-sm font-medium" htmlFor={`image-${id}`}>URL de l’image</label>
@@ -175,6 +210,29 @@ export default function ArticleCard({
                 placeholder="https://exemple.com/image.jpg"
                 className="input"
               />
+
+              <label className="text-sm font-medium" htmlFor={`file-${id}`}>Image (fichier) (optionnel, &lt; 2Mo)</label>
+              <input
+                id={`file-${id}`}
+                type="file"
+                accept="image/*"
+                onChange={(e) => {
+                  const f = e.target.files?.[0] || null;
+                  if (!f) {
+                    setImageFile(null);
+                    return;
+                  }
+                  if (f.size > MAX_IMAGE_BYTES) {
+                    setErrorMsg('Image trop lourde (max 2Mo).');
+                    e.target.value = '';
+                    setImageFile(null);
+                    return;
+                  }
+                  setImageFile(f);
+                }}
+                className="input"
+              />
+
               {isValidUrl(form.imageUrl) && form.imageUrl ? (
                 <img src={form.imageUrl} alt="Prévisualisation" className="w-full h-32 object-cover rounded border" />
               ) : form.imageUrl ? (
@@ -190,6 +248,29 @@ export default function ArticleCard({
             <>
               <h3 className="text-xl font-bold text-secondary mb-2">{view.titre}</h3>
               <p className="text-content mb-3">{view.description}</p>
+              {canEdit && view.imageStored && (
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (!window.confirm('Retirer l’image stockée ?')) return;
+                    setErrorMsg(null);
+                    setLoading(true);
+                    try {
+                      const updated = await deleteArticleImage(id);
+                      setView((v) => ({ ...v, imageStored: Boolean(updated?.imageStored) }));
+                      setImageRev((n) => n + 1);
+                      if (typeof onUpdated === 'function') onUpdated(updated);
+                    } catch (err) {
+                      setErrorMsg(getApiErrorMessage(err) || "Impossible de retirer l'image.");
+                    } finally {
+                      setLoading(false);
+                    }
+                  }}
+                  className="text-sm text-gray-700 underline hover:opacity-80"
+                >
+                  Retirer l’image stockée
+                </button>
+              )}
               <a href={view.sourceUrl} target="_blank" rel="noopener noreferrer" className="text-link font-semibold hover:underline">
                 Lire la suite →
               </a>

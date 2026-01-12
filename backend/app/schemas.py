@@ -57,6 +57,7 @@ class ArticleOut(APIModel):
     description: Optional[str] = None
     image_url: Optional[str] = None
     source_url: Optional[str] = None
+    image_stored: bool = False
 
 
 # Back-compat (imports existants)
@@ -134,3 +135,23 @@ class HistoireOut(HistoireCreate):
 
 # Back-compat: certains modules importent encore HistoireBase
 HistoireBase = HistoireCreate
+
+
+# ==========================
+# Cartes (Géographie) (Create/Update/Out)
+# ==========================
+class CarteCreate(APIModel):
+    titre: str = Field(min_length=1)
+    iframe_url: str = Field(min_length=1)
+    legende: Optional[str] = None
+
+
+class CarteUpdate(APIModel):
+    titre: Optional[str] = None
+    iframe_url: Optional[str] = None
+    legende: Optional[str] = None
+
+
+class CarteOut(CarteCreate):
+    id: int
+    image_stored: bool = False

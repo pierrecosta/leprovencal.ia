@@ -57,3 +57,38 @@ def delete_article_service(db: Session, *, article_id: int) -> None:
 
     articles_crud.delete_article(db, obj=obj)
     db.commit()
+
+
+def set_article_image_service(db: Session, *, article_id: int, image_data: bytes, image_mime: str) -> Article:
+    obj = articles_crud.get_article_by_id(db, article_id=article_id)
+    if not obj:
+        raise NotFoundError("Article non trouvé")
+
+    obj.image_data = image_data
+    obj.image_mime = image_mime
+    db.commit()
+    db.refresh(obj)
+    return obj
+
+
+def clear_article_image_service(db: Session, *, article_id: int) -> Article:
+    obj = articles_crud.get_article_by_id(db, article_id=article_id)
+    if not obj:
+        raise NotFoundError("Article non trouvé")
+
+    obj.image_data = None
+    obj.image_mime = None
+    db.commit()
+    db.refresh(obj)
+    return obj
+
+
+def get_article_image_service(db: Session, *, article_id: int) -> tuple[bytes, str]:
+    obj = articles_crud.get_article_by_id(db, article_id=article_id)
+    if not obj:
+        raise NotFoundError("Article non trouvé")
+
+    if not obj.image_data or not obj.image_mime:
+        raise NotFoundError("Image non trouvée")
+
+    return obj.image_data, obj.image_mime

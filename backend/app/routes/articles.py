@@ -4,7 +4,7 @@ Description: Routes CRUD pour les Articles avec authentification JWT et paginati
 Stack: FastAPI + SQLAlchemy + Pydantic
 """
 
-from fastapi import APIRouter, Depends, status, Query
+from fastapi import APIRouter, Depends, status, Query, UploadFile, File, Response
 from sqlalchemy.orm import Session
 from typing import List
 
@@ -14,6 +14,7 @@ from app.utils.security import require_authenticated
 from app.services import articles as articles_service
 from app.services.errors import NotFoundError, ValidationError
 from app.utils.http_errors import http_error
+from app.utils.images import validate_image_upload
 
 router = APIRouter()
 
@@ -75,5 +76,43 @@ def delete_article(
     try:
         articles_service.delete_article_service(db, article_id=article_id)
         return None
+    except NotFoundError as e:
+        raise http_error(404, code="not_found", message=f"{e} (resource=article id={article_id})")
+
+
+@router.get("/{article_id}/image")
+def get_article_image(article_id: int, db: Session = Depends(get_db)):
+    try:
+        data, mime = articles_service.get_article_image_service(db, article_id=article_id)
+        return Response(content=data, media_type=mime)
+    except NotFoundError as e:
+        raise http_error(404, code="not_found", message=f"{e} (resource=article_image article id={article_id})")
+
+
+@router.put("/{article_id}/image", response_model=ArticleOut)
+async def upload_article_image(
+    article_id: int,
+    image: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    user: str = Depends(require_authenticated),
+):
+    try:
+        data = await image.read()
+        info = validate_image_upload(data=data, declared_mime=image.content_type)
+        return articles_service.set_article_image_service(db, article_id=article_id, image_data=data, image_mime=info.mime)
+    except ValueError as e:
+        raise http_error(413, code="validation_error", message=str(e), field="image")
+    except NotFoundError as e:
+        raise http_error(404, code="not_found", message=f"{e} (resource=article id={article_id})")
+
+
+@router.delete("/{article_id}/image", response_model=ArticleOut)
+def delete_article_image(
+    article_id: int,
+    db: Session = Depends(get_db),
+    user: str = Depends(require_authenticated),
+):
+    try:
+        return articles_service.clear_article_image_service(db, article_id=article_id)
     except NotFoundError as e:
         raise http_error(404, code="not_found", message=f"{e} (resource=article id={article_id})")

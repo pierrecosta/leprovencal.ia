@@ -1,9 +1,11 @@
 
 import { useEffect, useState } from 'react';
-import { getArticles, createArticle } from '../services/api';
+import { createArticle, getArticles, uploadArticleImage } from '../services/api';
 import ArticleCard from '../components/ArticleCard';
 import Loader from '../components/Loader';
 import { useAuth } from '../hooks/useAuth';
+
+const MAX_IMAGE_BYTES = 2 * 1024 * 1024;
 
 export default function HomePage() {
   const { user } = useAuth();
@@ -11,6 +13,7 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [newArticle, setNewArticle] = useState({ titre: '', description: '' });
+  const [newImageFile, setNewImageFile] = useState(null);
   const [adding, setAdding] = useState(false);
 
   useEffect(() => {
@@ -39,9 +42,13 @@ export default function HomePage() {
             if (!newArticle.titre.trim()) return;
             setAdding(true);
             try {
-              const created = await createArticle(newArticle);
+              let created = await createArticle(newArticle);
+              if (newImageFile) {
+                created = await uploadArticleImage(created.id, newImageFile);
+              }
               setArticles((s) => [created, ...s]);
               setNewArticle({ titre: '', description: '' });
+              setNewImageFile(null);
             } catch (err) {
               // TODO: handle error display
             } finally {
@@ -63,6 +70,26 @@ export default function HomePage() {
             placeholder="Résumé"
             value={newArticle.description}
             onChange={(e) => setNewArticle({ ...newArticle, description: e.target.value })}
+          />
+
+          <input
+            className="input mb-2"
+            type="file"
+            accept="image/*"
+            onChange={(e) => {
+              const f = e.target.files?.[0] || null;
+              if (!f) {
+                setNewImageFile(null);
+                return;
+              }
+              if (f.size > MAX_IMAGE_BYTES) {
+                // Keep this minimal (no new UI); user can pick another file.
+                e.target.value = '';
+                setNewImageFile(null);
+                return;
+              }
+              setNewImageFile(f);
+            }}
           />
           <button type="submit" className="btn btn-primary" disabled={adding}>
             {adding ? 'Ajout...' : "Ajouter l'article"}

@@ -14,30 +14,35 @@ export default function Header() {
   return (
     <header className="navbar">
       <div className="navbar-inner">
-        <Link to="/" className="nav-brand text-2xl">
-          Le Provençal
-        </Link>
+        <div className="navbar-top">
+          <div className="navbar-left">
+            {user ? (
+              <button onClick={handleLogout} className="btn btn-secondary" aria-label="Se déconnecter" title="Se déconnecter">
+                Se déconnecter
+              </button>
+            ) : (
+              <Link to="/login" className="btn btn-secondary" title="Se connecter">
+                Se connecter
+              </Link>
+            )}
+          </div>
 
-        <nav className="nav-links">
+          <div className="navbar-center">
+            <Link to="/" className="nav-brand">
+              Le Provençal
+            </Link>
+          </div>
+
+          <div className="navbar-right">
+            {user ? <span className="nav-link opacity-90 cursor-default">{user.username}</span> : <span />}
+          </div>
+        </div>
+
+        <nav className="nav-links" aria-label="Navigation principale">
           <Link to="/" className="nav-link">Accueil</Link>
           <Link to="/langue-dictionnaire" className="nav-link">Langue &amp; Dictionnaire</Link>
           <Link to="/geographie" className="nav-link">Géographie</Link>
           <Link to="/histoire-legendes" className="nav-link">Histoire &amp; Légendes</Link>
-
-          {user ? (
-            <div className="flex items-center gap-2">
-              <span className="nav-link opacity-90 cursor-default">
-                Connecté : {user.username}
-              </span>
-              <button onClick={handleLogout} className="btn btn-accent" aria-label="Se déconnecter" title="Se déconnecter">
-                Se déconnecter
-              </button>
-            </div>
-          ) : (
-            <Link to="/login" className="nav-link" title="Se connecter">
-              Se connecter
-            </Link>
-          )}
         </nav>
       </div>
     </header>

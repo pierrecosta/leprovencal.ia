@@ -7,7 +7,7 @@ import time
 
 from app.core.config import get_settings
 from app.database import get_db
-from app.routes import auth, articles, dictionnaire, histoires
+from app.routes import auth, articles, dictionnaire, histoires, cartes
 
 settings = get_settings()
 
@@ -60,3 +60,4 @@ app.include_router(auth.router, prefix="/auth", tags=["Auth"])
 app.include_router(articles.router, prefix="/articles", tags=["Articles"])
 app.include_router(dictionnaire.router, prefix="/dictionnaire", tags=["Dictionnaire"])
 app.include_router(histoires.router, prefix="/histoires", tags=["Histoires"])
+app.include_router(cartes.router, prefix="/cartes", tags=["Cartes"])
