@@ -62,13 +62,10 @@ function dispatchLogout(reason = 'unauthorized') {
     // ignore
   }
 
-  // Minimal predictable behavior without needing App/useAuth changes.
-  // Avoid redirect loops if already on /login.
-  try {
-    if (window.location?.pathname !== '/login') window.location.assign('/login');
-  } catch {
-    // ignore
-  }
+  // Note: do NOT redirect to /login automatically. The app should remain browsable
+  // for anonymous users; authenticated-only actions will fail with 401 and the
+  // UI can decide whether to prompt for login or show an error. This keeps
+  // read-only browsing available by default.
 }
 
 // ==========================
@@ -212,6 +209,20 @@ export const getArticles = () =>
     ...res,
     data: Array.isArray(res.data) ? res.data.map(normalizeArticleOut) : res.data,
   }));
+
+// Create a new article (authenticated)
+export async function createArticle(payload) {
+  const { data } = await authHttp.post(`/articles`, normalizeArticlePayload(payload), {
+    headers: { 'Content-Type': 'application/json' },
+  });
+  return normalizeArticleOut(data);
+}
+
+// Delete an article (authenticated)
+export async function deleteArticle(id) {
+  const res = await authHttp.delete(`/articles/${id}`);
+  return res;
+}
 
 // --- Dictionnaire (publics) ---
 export const getDictionary = (params) =>

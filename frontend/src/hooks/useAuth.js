@@ -1,9 +1,9 @@
 // hooks/useAuth.js
-import { useEffect, useState, useCallback } from 'react';
-import { clearToken, getMe, getToken } from '../services/api';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { clearToken, getMe } from '../services/api';
 import { logError } from '../utils/logger';
 
-// Ensure /auth/me is called once per page load even if useAuth() is used in many components.
+// A small cache so we don't hammer `/auth/me` on initial render when many components mount.
 let _mePromise = null;
 let _meValue = null;
 
@@ -22,58 +22,74 @@ async function getMeOnce() {
   return _mePromise;
 }
 
-export function useAuth() {
+const AuthContext = createContext(null);
+
+export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [ready, setReady] = useState(false);
 
-  useEffect(() => {
-    const onLogout = () => {
-      setUser(null);
-      setReady(true);
-    };
-    window.addEventListener('auth:logout', onLogout);
-    return () => window.removeEventListener('auth:logout', onLogout);
-  }, []);
-
-  // NEW: listen for same-tab login events to refresh user immediately
+  // load current user once on mount
   useEffect(() => {
     let mounted = true;
-    const onLogin = async () => {
+    (async () => {
       try {
         const me = await getMeOnce();
         if (mounted) setUser(me);
       } catch (err) {
         logError(err);
         if (mounted) setUser(null);
+      } finally {
+        if (mounted) setReady(true);
       }
-    };
-    window.addEventListener('auth:login', onLogin);
+    })();
     return () => {
       mounted = false;
-      window.removeEventListener('auth:login', onLogin);
     };
   }, []);
 
-  // Always try getMe() at load — supports HttpOnly cookie auth (SameSite)
+  // listen for auth events within the same tab
   useEffect(() => {
-    (async () => {
+    const onLogin = async () => {
       try {
-        const me = await getMeOnce();
+        const me = await getMe();
+        _meValue = me;
         setUser(me);
       } catch (err) {
         logError(err);
+        _meValue = null;
         setUser(null);
-        clearToken();
-      } finally {
-        setReady(true);
       }
-    })();
+    };
+
+    const onLogout = () => {
+      _meValue = null;
+      setUser(null);
+      setReady(true);
+    };
+
+    window.addEventListener('auth:login', onLogin);
+    window.addEventListener('auth:logout', onLogout);
+    return () => {
+      window.removeEventListener('auth:login', onLogin);
+      window.removeEventListener('auth:logout', onLogout);
+    };
   }, []);
 
   const logout = useCallback(() => {
-    clearToken();
+    clearToken(); // services/api should emit auth:logout
+    _meValue = null;
     setUser(null);
   }, []);
 
-  return { user, ready, logout };
+  const value = useMemo(() => ({ user, ready, logout, setUser }), [user, ready, logout]);
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+}
+
+export function useAuth() {
+  const ctx = useContext(AuthContext);
+  if (!ctx) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return ctx;
 }

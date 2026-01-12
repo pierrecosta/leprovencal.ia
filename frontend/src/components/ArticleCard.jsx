@@ -2,7 +2,7 @@
 import { useMemo, useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import ApiAlert from './ApiAlert';
-import { getApiErrorMessage, updateArticle } from '../services/api';
+import { getApiErrorMessage, updateArticle, deleteArticle } from '../services/api';
 
 export default function ArticleCard({
   id,
@@ -13,6 +13,7 @@ export default function ArticleCard({
   sourceUrl,
   source_url, // back-compat
   onUpdated,
+  onDeleted,
 }) {
   const { user, ready } = useAuth();
 
@@ -29,6 +30,8 @@ export default function ArticleCard({
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState(null);
+
+  const [deleting, setDeleting] = useState(false);
 
   const hasChanges = useMemo(() => {
     return (
@@ -126,6 +129,27 @@ export default function ArticleCard({
                 {loading ? 'Enregistrement…' : 'Valider'}
               </button>
             </>
+          )}
+          {!isEditing && (
+            <button
+              type="button"
+              onClick={async () => {
+                if (!window.confirm('Supprimer cet article ?')) return;
+                setDeleting(true);
+                try {
+                  await deleteArticle(id);
+                  if (typeof onDeleted === 'function') onDeleted(id);
+                } catch (err) {
+                  setErrorMsg(getApiErrorMessage(err) || 'Impossible de supprimer.');
+                } finally {
+                  setDeleting(false);
+                }
+              }}
+              disabled={deleting}
+              className="px-3 py-1.5 rounded bg-red-600 text-white hover:opacity-90"
+            >
+              {deleting ? 'Suppression…' : 'Supprimer'}
+            </button>
           )}
         </div>
       )}

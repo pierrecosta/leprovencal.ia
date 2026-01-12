@@ -2,7 +2,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ApiAlert from '../components/ApiAlert';
-import { getApiErrorMessage, setToken } from '../services/api';
+import { getApiErrorMessage, login, getRetryAfterSeconds } from '../services/api';
 
 export default function Login() {
   const [form, setForm] = useState({ username: '', password: '' });
@@ -46,7 +46,6 @@ export default function Login() {
       }
 
       await login({ username: form.username.trim(), password: form.password });
-      await getMe();
       navigate('/');
     } catch (err) {
       const status = err?.response?.status;
