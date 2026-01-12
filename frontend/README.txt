@@ -26,8 +26,8 @@
 ---
 
 ## 3. Accessibilité minimale
-- [ ] Ajouter des **textes alternatifs** pour les images.
-- [ ] Vérifier la navigation clavier basique (tabulation).
+- [x] Ajouter des **textes alternatifs** pour les images. — UPDATED: `ArticleCard` images include `alt`; SVGs converted to `currentColor` and `logo.svg` has accessible `title` via `alt` when used as <img> or inherits color when inlined.
+- [x] Vérifier la navigation clavier basique (tabulation). — UPDATED: sortable table headers in `DictionaryTable` now have `role="button"`, `tabIndex=0` and handle Enter/Space; interactive elements are standard `<button>` where appropriate.
 
 ---
 

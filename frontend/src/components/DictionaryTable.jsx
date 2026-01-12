@@ -9,7 +9,19 @@ export default function DictionaryTable({ mots, sort, order, onSort }) {
         <thead>
           <tr>
             {['theme', 'categorie', 'mots_francais', 'mots_provencal'].map((col) => (
-              <th key={col} className="cursor-pointer" onClick={() => onSort(col)}>
+              <th
+                key={col}
+                className="cursor-pointer"
+                role="button"
+                tabIndex={0}
+                onClick={() => onSort(col)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    onSort(col);
+                  }
+                }}
+              >
                 {col} {sortIcon(col)}
               </th>
             ))}
