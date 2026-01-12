@@ -9,27 +9,37 @@ const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:8000';
 // On garde une instance "publiques" pour compat (GET publiques existantes)
 const http = axios.create({
   baseURL: API_BASE,
+  withCredentials: true, // <-- enable cookies (SameSite handled by backend cookie)
 });
 
 // ===== Instance axios avec auth =====
 // Cette instance attache automatiquement le token s'il est présent
 const authHttp = axios.create({
   baseURL: API_BASE,
+  withCredentials: true, // <-- send cookies automatically
 });
 
-// --- Token management ---
-const TOKEN_KEY = 'access_token';
+// --- Token management (in-memory) ---
+let _token = null;
 
 export function setToken(token) {
-  localStorage.setItem(TOKEN_KEY, token);
+  _token = token;
+  if (token) {
+    // keep Authorization header for in-memory access-token usage (optional)
+    authHttp.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    try { window.dispatchEvent(new Event('auth:login')); } catch {}
+  } else {
+    delete authHttp.defaults.headers.common['Authorization'];
+    try { window.dispatchEvent(new CustomEvent('auth:logout', { detail: { reason: 'manual' } })); } catch {}
+  }
 }
 
 export function getToken() {
-  return localStorage.getItem(TOKEN_KEY);
+  return _token;
 }
 
 export function clearToken() {
-  localStorage.removeItem(TOKEN_KEY);
+  setToken(null);
 }
 
 // ==========================

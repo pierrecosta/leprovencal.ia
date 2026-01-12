@@ -35,13 +35,27 @@ export function useAuth() {
     return () => window.removeEventListener('auth:logout', onLogout);
   }, []);
 
+  // NEW: listen for same-tab login events to refresh user immediately
   useEffect(() => {
-    const token = getToken();
-    if (!token) {
-      setReady(true);
-      return;
-    }
+    let mounted = true;
+    const onLogin = async () => {
+      try {
+        const me = await getMeOnce();
+        if (mounted) setUser(me);
+      } catch (err) {
+        logError(err);
+        if (mounted) setUser(null);
+      }
+    };
+    window.addEventListener('auth:login', onLogin);
+    return () => {
+      mounted = false;
+      window.removeEventListener('auth:login', onLogin);
+    };
+  }, []);
 
+  // Always try getMe() at load — supports HttpOnly cookie auth (SameSite)
+  useEffect(() => {
     (async () => {
       try {
         const me = await getMeOnce();

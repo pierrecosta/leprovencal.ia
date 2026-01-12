@@ -28,5 +28,6 @@
 - [x] Reusable alert component (ApiAlert)
 
 ## CSS System (Next)
-- [ ] Make `theme.css` the only source for palette/typography/shadows
-- [ ] Remove remaining duplicated styles between App/theme/Tailwind
+## CSS System (Next)
+- [x] Make `theme.css` the only source for palette/typography/shadows — UPDATED: moved App.css drop-shadow values into `theme.css` variables; converted `olive.svg`, `lavender.svg`, and `logo.svg` to `currentColor`; added small SVG utility classes in `theme.css`.
+- [x] Remove remaining duplicated styles between App/theme/Tailwind — UPDATED: moved `.btn` margin into `theme.css` and removed duplicated `.container`/`.section`/`.card`/`.btn` rules from `App.css`.

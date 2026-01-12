@@ -15,42 +15,31 @@
   margin-bottom: 1rem;
 }
 
-/* Conteneur contenu central */
-.App .container {
-  max-width: var(--container-max);
-  margin: 1.2rem auto;
-  padding: 0 var(--container-padding);
-}
+/* Conteneur contenu central — rely on `.container` from theme.css */
 
-/* Sections (s’appuient sur .section de theme.css) */
-.App .section {
-  margin: 1.25rem auto;
-}
+/* Sections: use `.section` from theme.css */
 
-/* Cartes (s’appuient sur .card de theme.css) */
-.App .card {
-  margin: 0.75rem auto;
-}
+/* Cards: use `.card` from theme.css */
 
 /* Titres / texte: moved to theme.css / Tailwind (avoid duplication) */
 /* .App h1 { ... } */
 /* .App h2 { ... } */
 /* .App p, .App li { ... } */
 
-/* Boutons (utilisent les classes .btn* définies dans theme.css) */
-.App .btn { margin-top: 0.5rem; }
+/* Boutons: margin moved to `theme.css` */
 
 /* Logo React / illustration */
 .App-logo {
   height: 40vmin;
   pointer-events: none;
-  filter: drop-shadow(0 8px 20px rgba(75, 58, 94, 0.16));
+  filter: drop-shadow(var(--filter-drop-shadow-md));
+  color: var(--accent);
   transition: transform 0.2s ease, filter 0.2s ease;
 }
 
 .App-logo:hover {
   transform: scale(1.02);
-  filter: drop-shadow(0 12px 28px rgba(75, 58, 94, 0.18));
+  filter: drop-shadow(var(--filter-drop-shadow-lg));
 }
 
 @media (prefers-reduced-motion: no-preference) {

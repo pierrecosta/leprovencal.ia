@@ -2,7 +2,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ApiAlert from '../components/ApiAlert';
-import { getApiErrorMessage, getMe, getRetryAfterSeconds, login } from '../services/api';
+import { getApiErrorMessage, setToken } from '../services/api';
 
 export default function Login() {
   const [form, setForm] = useState({ username: '', password: '' });
