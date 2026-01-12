@@ -36,7 +36,8 @@ export function AuthProvider({ children }) {
         const me = await getMeOnce();
         if (mounted) setUser(me);
       } catch (err) {
-        logError(err);
+        const status = err?.response?.status;
+        if (status !== 401) logError(err);
         if (mounted) setUser(null);
       } finally {
         if (mounted) setReady(true);
@@ -55,7 +56,8 @@ export function AuthProvider({ children }) {
         _meValue = me;
         setUser(me);
       } catch (err) {
-        logError(err);
+        const status = err?.response?.status;
+        if (status !== 401) logError(err);
         _meValue = null;
         setUser(null);
       }

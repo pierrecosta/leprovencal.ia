@@ -54,7 +54,7 @@ class Carte(Base):
     __tablename__ = "cartes"
     id = Column(Integer, primary_key=True, index=True)
     titre = Column(String(120), nullable=False)
-    iframe_url = Column(String(500), nullable=False)
+    iframe_url = Column(String(500), nullable=True)
     legende = Column(String(200), nullable=True)
     # Optional stored image (<=2MB enforced at API layer)
     image_data = Column(LargeBinary, nullable=True)

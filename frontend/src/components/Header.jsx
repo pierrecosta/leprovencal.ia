@@ -14,35 +14,35 @@ export default function Header() {
   return (
     <header className="navbar">
       <div className="navbar-inner">
-        <div className="navbar-top">
-          <div className="navbar-left">
+        <Link to="/" className="nav-brand">
+          Le Provençal
+        </Link>
+
+        <nav className="nav-links" aria-label="Navigation principale">
+          <div className="nav-menu">
+            <Link to="/" className="nav-link">Accueil</Link>
+            <Link to="/langue-dictionnaire" className="nav-link">Langue &amp; Dictionnaire</Link>
+            <Link to="/geographie" className="nav-link">Géographie</Link>
+            <Link to="/histoire-legendes" className="nav-link">Histoire &amp; Légendes</Link>
+          </div>
+
+          <div className="nav-auth">
             {user ? (
-              <button onClick={handleLogout} className="btn btn-secondary" aria-label="Se déconnecter" title="Se déconnecter">
+              <button
+                onClick={handleLogout}
+                className="nav-link nav-link-auth"
+                aria-label="Se déconnecter"
+                title={`Connecté: ${user.username}`}
+                type="button"
+              >
                 Se déconnecter
               </button>
             ) : (
-              <Link to="/login" className="btn btn-secondary" title="Se connecter">
+              <Link to="/login" className="nav-link nav-link-auth" title="Se connecter">
                 Se connecter
               </Link>
             )}
           </div>
-
-          <div className="navbar-center">
-            <Link to="/" className="nav-brand">
-              Le Provençal
-            </Link>
-          </div>
-
-          <div className="navbar-right">
-            {user ? <span className="nav-link opacity-90 cursor-default">{user.username}</span> : <span />}
-          </div>
-        </div>
-
-        <nav className="nav-links" aria-label="Navigation principale">
-          <Link to="/" className="nav-link">Accueil</Link>
-          <Link to="/langue-dictionnaire" className="nav-link">Langue &amp; Dictionnaire</Link>
-          <Link to="/geographie" className="nav-link">Géographie</Link>
-          <Link to="/histoire-legendes" className="nav-link">Histoire &amp; Légendes</Link>
         </nav>
       </div>
     </header>

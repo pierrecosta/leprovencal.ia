@@ -100,5 +100,7 @@ def delete_carte_image(
 ):
     try:
         return cartes_service.clear_carte_image_service(db, carte_id=carte_id)
+    except ValidationError as e:
+        raise http_error(422, code="validation_error", message=str(e))
     except NotFoundError as e:
         raise http_error(404, code="not_found", message=str(e), extra={"resource": "carte", "id": carte_id})

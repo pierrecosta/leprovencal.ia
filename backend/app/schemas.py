@@ -142,7 +142,7 @@ HistoireBase = HistoireCreate
 # ==========================
 class CarteCreate(APIModel):
     titre: str = Field(min_length=1)
-    iframe_url: str = Field(min_length=1)
+    iframe_url: Optional[str] = None
     legende: Optional[str] = None
 
 

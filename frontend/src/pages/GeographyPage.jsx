@@ -17,6 +17,7 @@ export default function GeographyPage() {
 
   const [createForm, setCreateForm] = useState({ titre: '', iframeUrl: '', legende: '' });
   const [createImageFile, setCreateImageFile] = useState(null);
+  const [creating, setCreating] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState({ titre: '', iframeUrl: '', legende: '' });
   const [editImageFile, setEditImageFile] = useState(null);
@@ -93,15 +94,32 @@ export default function GeographyPage() {
   const submitCreate = async (e) => {
     e.preventDefault();
     setError('');
+    const titre = (createForm.titre || '').trim();
+    const iframeUrl = (createForm.iframeUrl || '').trim();
+    if (!titre) return setError('Le titre est obligatoire.');
+    if (!iframeUrl && !createImageFile) return setError('Il faut une iframe URL ou une image.');
     try {
       let created = await createCarte(createForm);
       if (createImageFile) {
-        created = await uploadCarteImage(created.id, createImageFile);
-        setImgRevById((m) => ({ ...m, [created.id]: (m[created.id] || 0) + 1 }));
+        try {
+          created = await uploadCarteImage(created.id, createImageFile);
+          setImgRevById((m) => ({ ...m, [created.id]: (m[created.id] || 0) + 1 }));
+        } catch (uploadErr) {
+          // Avoid leaving a carte without iframe nor image
+          if (!iframeUrl) {
+            try {
+              await deleteCarte(created.id);
+            } catch {
+              // ignore
+            }
+          }
+          throw uploadErr;
+        }
       }
       setItems((prev) => [created, ...prev]);
       setCreateForm({ titre: '', iframeUrl: '', legende: '' });
       setCreateImageFile(null);
+      setCreating(false);
     } catch (err) {
       logError(err);
       setError("Impossible de créer la carte.");
@@ -116,63 +134,68 @@ export default function GeographyPage() {
 
       {isLoggedIn && (
         <section className="mb-6 border rounded bg-white shadow-sm">
-          <header className="px-4 py-3 border-b bg-[var(--bg)]">
-            <h3 className="font-bold text-xl text-[var(--color-lavender)]">Ajouter une carte</h3>
+          <header className="px-4 py-3 border-b bg-[var(--bg)] flex items-center justify-between gap-2">
+            <h3 className="font-bold text-xl text-[var(--color-lavender)]">Gestion (loggué)</h3>
+            <button className="btn btn-primary" onClick={() => setCreating((v) => !v)} type="button">
+              {creating ? 'Fermer' : 'Ajouter une carte'}
+            </button>
           </header>
-          <form onSubmit={submitCreate} className="p-4 grid md:grid-cols-3 gap-3">
-            <div>
-              <label className="block text-sm font-semibold mb-1">Titre *</label>
-              <input
-                className="input"
-                required
-                value={createForm.titre}
-                onChange={(e) => setCreateForm((f) => ({ ...f, titre: e.target.value }))}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-semibold mb-1">Iframe URL *</label>
-              <input
-                className="input"
-                required
-                value={createForm.iframeUrl}
-                onChange={(e) => setCreateForm((f) => ({ ...f, iframeUrl: e.target.value }))}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-semibold mb-1">Légende</label>
-              <input
-                className="input"
-                value={createForm.legende}
-                onChange={(e) => setCreateForm((f) => ({ ...f, legende: e.target.value }))}
-              />
-            </div>
-            <div className="md:col-span-3">
-              <label className="block text-sm font-semibold mb-1">Image (fichier) (optionnel, &lt; 2Mo)</label>
-              <input
-                className="input"
-                type="file"
-                accept="image/*"
-                onChange={(e) => {
-                  const f = e.target.files?.[0] || null;
-                  if (!f) {
-                    setCreateImageFile(null);
-                    return;
-                  }
-                  if (f.size > MAX_IMAGE_BYTES) {
-                    e.target.value = '';
-                    setCreateImageFile(null);
-                    return;
-                  }
-                  setCreateImageFile(f);
-                }}
-              />
-            </div>
-            <div className="md:col-span-3">
-              <button type="submit" className="btn btn-primary">
-                Ajouter
-              </button>
-            </div>
-          </form>
+
+          {creating && (
+            <form onSubmit={submitCreate} className="p-4 grid md:grid-cols-3 gap-3">
+              <div>
+                <label className="block text-sm font-semibold mb-1">Titre *</label>
+                <input
+                  className="input"
+                  required
+                  value={createForm.titre}
+                  onChange={(e) => setCreateForm((f) => ({ ...f, titre: e.target.value }))}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold mb-1">Iframe URL (optionnel si image)</label>
+                <input
+                  className="input"
+                  value={createForm.iframeUrl}
+                  onChange={(e) => setCreateForm((f) => ({ ...f, iframeUrl: e.target.value }))}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold mb-1">Légende</label>
+                <input
+                  className="input"
+                  value={createForm.legende}
+                  onChange={(e) => setCreateForm((f) => ({ ...f, legende: e.target.value }))}
+                />
+              </div>
+              <div className="md:col-span-3">
+                <label className="block text-sm font-semibold mb-1">Image (fichier) (optionnel, &lt; 2Mo)</label>
+                <input
+                  className="input"
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0] || null;
+                    if (!f) {
+                      setCreateImageFile(null);
+                      return;
+                    }
+                    if (f.size > MAX_IMAGE_BYTES) {
+                      e.target.value = '';
+                      setCreateImageFile(null);
+                      return;
+                    }
+                    setCreateImageFile(f);
+                  }}
+                />
+              </div>
+              <div className="md:col-span-3">
+                <button type="submit" className="btn btn-primary">
+                  Créer
+                </button>
+              </div>
+            </form>
+          )}
         </section>
       )}
 
@@ -189,7 +212,7 @@ export default function GeographyPage() {
                   loading="lazy"
                   className="w-full h-[320px] md:h-[400px] object-cover"
                 />
-              ) : (
+              ) : carte.iframeUrl ? (
                 <iframe
                   src={carte.iframeUrl}
                   title={carte.titre}
@@ -197,6 +220,8 @@ export default function GeographyPage() {
                   referrerPolicy="no-referrer"
                   className="w-full h-[320px] md:h-[400px] border-0"
                 />
+              ) : (
+                <div className="w-full h-[320px] md:h-[400px] bg-[var(--slate-100)]" />
               )}
 
               <div className="p-3">

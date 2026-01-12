@@ -153,9 +153,13 @@ function normalizeCarteOut(c = {}) {
 }
 
 function normalizeCartePayload(payload = {}) {
+  const rawIframe = payload.iframeUrl ?? payload.iframe_url;
+  const hasIframe = typeof rawIframe === 'string' ? rawIframe.trim() !== '' : rawIframe != null;
   return {
     ...(payload.titre != null ? { titre: payload.titre } : {}),
-    ...(payload.iframeUrl != null || payload.iframe_url != null ? { iframeUrl: payload.iframeUrl ?? payload.iframe_url } : {}),
+    ...(payload.iframeUrl != null || payload.iframe_url != null
+      ? { iframeUrl: hasIframe ? (typeof rawIframe === 'string' ? rawIframe.trim() : rawIframe) : null }
+      : {}),
     ...(payload.legende != null ? { legende: payload.legende } : {}),
   };
 }
