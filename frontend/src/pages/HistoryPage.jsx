@@ -4,6 +4,7 @@ import Loader from '../components/Loader';
 import { useAuth } from '../hooks/useAuth';
 import { logError } from '../utils/logger';
 import { createHistoire, deleteHistoire, getHistoireById, getMenuHistoires, updateHistoire, getApiErrorMessage, getApiErrorField } from '../services/api';
+import { toastError, toastSuccess } from '../utils/notify';
 
 export default function HistoryPage() {
   const { user, ready } = useAuth();
@@ -37,7 +38,9 @@ export default function HistoryPage() {
         setMenuData(res.data);
       } catch (err) {
         logError(err);
-        setError("Impossible de charger le sommaire.");
+        const msg = "Impossible de charger le sommaire.";
+        setError(msg);
+        toastError(msg);
       } finally {
         setLoading(false);
       }
@@ -70,7 +73,9 @@ export default function HistoryPage() {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (err) {
       logError(err);
-      setError("Impossible de charger cette histoire.");
+      const msg = getApiErrorMessage(err);
+      setError(msg || "Impossible de charger cette histoire.");
+      toastError(msg || "Impossible de charger cette histoire.");
     } finally {
       setLoadingDetail(false);
     }
@@ -112,10 +117,12 @@ export default function HistoryPage() {
       setEditing(false);
       setEditForm(null);
       await refreshMenu();
+      toastSuccess('Histoire modifiée.');
     } catch (err) {
       logError(err);
       const msg = getApiErrorMessage(err);
       setError(msg || "Impossible de modifier cette histoire.");
+      toastError(msg || "Impossible de modifier cette histoire.");
       const field = getApiErrorField(err);
       if (field) setFieldErrors({ [field]: msg });
     }
@@ -133,10 +140,12 @@ export default function HistoryPage() {
       setEditing(false);
       setEditForm(null);
       await refreshMenu();
+      toastSuccess('Histoire supprimée.');
     } catch (err) {
       logError(err);
       const msg = getApiErrorMessage(err);
       setError(msg || "Impossible de supprimer cette histoire.");
+      toastError(msg || "Impossible de supprimer cette histoire.");
     }
   };
 
@@ -157,10 +166,12 @@ export default function HistoryPage() {
       setCreating(false);
       await refreshMenu();
       await openDetail(created.id);
+      toastSuccess('Histoire créée.');
     } catch (err) {
       logError(err);
       const msg = getApiErrorMessage(err);
       setError(msg || "Impossible de créer une histoire.");
+      toastError(msg || "Impossible de créer une histoire.");
       const field = getApiErrorField(err);
       if (field) setFieldErrors({ [field]: msg });
     }

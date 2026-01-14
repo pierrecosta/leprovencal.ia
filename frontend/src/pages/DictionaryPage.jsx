@@ -1,6 +1,7 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useDictionary } from '../hooks/useDictionary';
+import usePagination from '../hooks/usePagination';
 import Filters from '../components/DictionaryFilters';
 import AlphabetFilter from '../components/DictionaryAlphabetFilter';
 import DictionaryTable from '../components/DictionaryTable';
@@ -12,11 +13,17 @@ export default function DictionaryPage() {
   const [categorie, setCategorie] = useState('toutes');
   const [lettre, setLettre] = useState('toutes');
   const [search, setSearch] = useState('');
-  const [page, setPage] = useState(1);
   const [sort, setSort] = useState('mots_francais');
   const [order, setOrder] = useState('asc');
 
-  const { mots, themes, categories, pages, loading } = useDictionary({ theme, categorie, lettre, search, page, sort, order });
+  const { page, pages, setPage, setPages } = usePagination(1, 1);
+
+  const { mots, themes, categories, pages: totalPages, loading } = useDictionary({ theme, categorie, lettre, search, page, sort, order });
+
+  // keep pagination hook in sync with total pages returned by the API
+  useEffect(() => {
+    if (typeof totalPages === 'number') setPages(totalPages);
+  }, [totalPages, setPages]);
 
   const handleSort = (column) => {
     if (sort === column) {

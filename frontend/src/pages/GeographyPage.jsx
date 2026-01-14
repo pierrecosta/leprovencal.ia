@@ -2,8 +2,10 @@ import { useEffect, useMemo, useState } from 'react';
 import ApiAlert from '../components/ApiAlert';
 import Loader from '../components/Loader';
 import { useAuth } from '../hooks/useAuth';
-import { createCarte, deleteCarte, deleteCarteImage, getCarteImageUrl, getCartes, updateCarte, uploadCarteImage, getApiErrorMessage, getApiErrorField } from '../services/api';
+import { createCarte, deleteCarte, deleteCarteImage, getCarteImageUrl, getCartesPaged, updateCarte, uploadCarteImage, getApiErrorMessage, getApiErrorField } from '../services/api';
+import usePagination from '../hooks/usePagination';
 import { logError } from '../utils/logger';
+import { toastError, toastSuccess } from '../utils/notify';
 
 const MAX_IMAGE_BYTES = 2 * 1024 * 1024;
 
@@ -13,6 +15,8 @@ export default function GeographyPage() {
   const [error, setError] = useState('');
   const [fieldErrors, setFieldErrors] = useState({});
   const [items, setItems] = useState([]);
+  const { page, setPage } = usePagination(1, 1);
+  const [hasNext, setHasNext] = useState(false);
 
   const [imgRevById, setImgRevById] = useState({});
 
@@ -29,11 +33,17 @@ export default function GeographyPage() {
     setLoading(true);
     setError('');
     try {
-      const res = await getCartes();
-      setItems(Array.isArray(res.data) ? res.data : []);
+      // request limit+1 to detect next page
+      const res = await getCartesPaged({ page, limit: 6 });
+      const items = Array.isArray(res.data) ? res.data : [];
+      // default: show first 5
+      setItems(items.slice(0, 5));
+      setHasNext(items.length > 5);
     } catch (err) {
       logError(err);
-      setError("Impossible de charger les cartes.");
+      const msg = "Impossible de charger les cartes.";
+      setError(msg);
+      toastError(msg);
     } finally {
       setLoading(false);
     }
@@ -42,7 +52,7 @@ export default function GeographyPage() {
   useEffect(() => {
     fetchCartes();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [page]);
 
   const startEdit = (carte) => {
     setEditingId(carte.id);
@@ -93,6 +103,7 @@ export default function GeographyPage() {
       logError(err);
       const msg = getApiErrorMessage(err);
       setError(msg || "Impossible de modifier la carte.");
+      toastError(msg || "Impossible de modifier la carte.");
       const field = getApiErrorField(err);
       if (field) setFieldErrors({ [field]: msg });
     }
@@ -107,10 +118,12 @@ export default function GeographyPage() {
       await deleteCarte(id);
       setItems((prev) => prev.filter((c) => c.id !== id));
       if (editingId === id) cancelEdit();
+      toastSuccess('Carte supprimée.');
     } catch (err) {
       logError(err);
       const msg = getApiErrorMessage(err);
       setError(msg || "Impossible de supprimer la carte.");
+      toastError(msg || "Impossible de supprimer la carte.");
     }
   };
 
@@ -157,10 +170,12 @@ export default function GeographyPage() {
       setCreateForm({ titre: '', iframeUrl: '', legende: '' });
       setCreateImageFile(null);
       setCreating(false);
+      toastSuccess('Carte créée.');
     } catch (err) {
       logError(err);
       const msg = getApiErrorMessage(err);
       setError(msg || "Impossible de créer la carte.");
+      toastError(msg || "Impossible de créer la carte.");
       const field = getApiErrorField(err);
       if (field) setFieldErrors({ [field]: msg });
     }
@@ -368,7 +383,18 @@ export default function GeographyPage() {
             </div>
           ))}
         </div>
-      )}
+        )}
+        <div className="mt-6 flex justify-center gap-3">
+          <button className="btn btn-secondary" onClick={() => setPage(Math.max(1, page - 1))} disabled={page === 1}>
+            ← Précédent
+          </button>
+          <div className="flex items-center gap-4">
+            <span className="text-sm text-muted">Page {page}</span>
+          </div>
+          <button className="btn btn-primary" onClick={() => hasNext && setPage(page + 1)} disabled={!hasNext}>
+            Suivant →
+          </button>
+        </div>
     </main>
   );
 }

@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ApiAlert from '../components/ApiAlert';
 import { getApiErrorMessage, login, getRetryAfterSeconds } from '../services/api';
+import { toastError } from '../utils/notify';
 
 export default function Login() {
   const [form, setForm] = useState({ username: '', password: '' });
@@ -42,6 +43,7 @@ export default function Login() {
     try {
       if (!form.username.trim() || !form.password) {
         setError("Nom d’utilisateur et mot de passe requis.");
+        toastError("Nom d’utilisateur et mot de passe requis.");
         return;
       }
 
@@ -64,6 +66,7 @@ export default function Login() {
               ? 'Identifiants invalides.'
               : 'Erreur de connexion. Réessayez.')
       );
+      toastError(msg || (status === 429 ? 'Trop de tentatives. Réessayez bientôt.' : status === 401 ? 'Identifiants invalides.' : 'Erreur de connexion. Réessayez.'));
     } finally {
       setLoading(false);
     }

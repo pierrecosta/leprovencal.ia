@@ -1,9 +1,10 @@
 
 import { useEffect, useState } from 'react';
-import { createArticle, getArticles, uploadArticleImage, getApiErrorMessage, getApiErrorField } from '../services/api';
+import { createArticle, getArticlesPaged, uploadArticleImage, getApiErrorMessage, getApiErrorField } from '../services/api';
 import ArticleCard from '../components/ArticleCard';
 import Loader from '../components/Loader';
 import { useAuth } from '../hooks/useAuth';
+import usePagination from '../hooks/usePagination';
 
 const MAX_IMAGE_BYTES = 2 * 1024 * 1024;
 
@@ -18,11 +19,18 @@ export default function HomePage() {
   const [adding, setAdding] = useState(false);
   const [creating, setCreating] = useState(false);
 
+  const { page, setPage } = usePagination(1, 1);
+  const [hasNext, setHasNext] = useState(false);
+
   useEffect(() => {
     async function fetchArticles() {
+      setLoading(true);
       try {
-        const res = await getArticles();
-        setArticles(res.data);
+        // request limit+1 to detect next page
+        const res = await getArticlesPaged({ page, limit: 6 });
+        const items = Array.isArray(res.data) ? res.data : [];
+        setHasNext(items.length > 5);
+        setArticles(items.slice(0, 5));
       } catch (err) {
         setError('Impossible de charger les articles.');
       } finally {
@@ -30,7 +38,7 @@ export default function HomePage() {
       }
     }
     fetchArticles();
-  }, []);
+  }, [page]);
 
   if (loading) return <Loader message="Chargement des articles..." />;
   if (error) return <p className="text-red-600 text-center">{error}</p>;
@@ -137,6 +145,17 @@ export default function HomePage() {
             onDeleted={(id) => setArticles((a) => a.filter((x) => x.id !== id))}
           />
         ))}
+      </div>
+      <div className="mt-6 flex justify-center gap-3">
+        <button className="btn btn-secondary" onClick={() => setPage(Math.max(1, page - 1))} disabled={page === 1}>
+          ← Précédent
+        </button>
+        <div className="flex items-center gap-4">
+          <span className="text-sm text-muted">Page {page}</span>
+        </div>
+        <button className="btn btn-primary" onClick={() => hasNext && setPage(page + 1)} disabled={!hasNext}>
+          Suivant →
+        </button>
       </div>
     </div>
   );

@@ -1,6 +1,16 @@
 // services/api.js
 import axios from 'axios';
 import { logApiError } from '../utils/logger';
+import {
+  normalizeArticlePayload,
+  normalizeDictionnairePayload,
+  normalizeArticleOut,
+  normalizeMotOut,
+  normalizeHistoireOut,
+  normalizeCarteOut,
+  normalizeCartePayload,
+  normalizeMenuHistoiresOut,
+} from './normalizers';
 
 // ===== Base URL via .env (CRA) =====
 const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:8000';
@@ -68,124 +78,7 @@ function dispatchLogout(reason = 'unauthorized') {
   // read-only browsing available by default.
 }
 
-// ==========================
-//    NORMALISATION PAYLOADS
-// ==========================
-function normalizeArticlePayload(payload = {}) {
-  // Canonique frontend: { titre, description, imageUrl, sourceUrl }
-  // Back-compat: { title, src, image_url, source_url }
-  return {
-    ...(payload.titre != null || payload.title != null ? { titre: payload.titre ?? payload.title } : {}),
-    ...(payload.description != null ? { description: payload.description } : {}),
-    ...(payload.imageUrl != null || payload.image_url != null || payload.src != null
-      ? { imageUrl: payload.imageUrl ?? payload.image_url ?? payload.src }
-      : {}),
-    ...(payload.sourceUrl != null || payload.source_url != null ? { sourceUrl: payload.sourceUrl ?? payload.source_url } : {}),
-  };
-}
-
-function normalizeDictionnairePayload(payload = {}) {
-  // Canonique frontend: camelCase (motsFrancais, motsProvencal, ...)
-  // Back-compat: snake_case
-  return {
-    ...(payload.theme != null ? { theme: payload.theme } : {}),
-    ...(payload.categorie != null ? { categorie: payload.categorie } : {}),
-    ...(payload.description != null ? { description: payload.description } : {}),
-    ...(payload.motsFrancais != null || payload.mots_francais != null ? { motsFrancais: payload.motsFrancais ?? payload.mots_francais } : {}),
-    ...(payload.motsProvencal != null || payload.mots_provencal != null ? { motsProvencal: payload.motsProvencal ?? payload.mots_provencal } : {}),
-    ...(payload.synonymesFrancais != null || payload.synonymes_francais != null ? { synonymesFrancais: payload.synonymesFrancais ?? payload.synonymes_francais } : {}),
-    ...(payload.egProvencal != null || payload.eg_provencal != null ? { egProvencal: payload.egProvencal ?? payload.eg_provencal } : {}),
-    ...(payload.dProvencal != null || payload.d_provencal != null ? { dProvencal: payload.dProvencal ?? payload.d_provencal } : {}),
-    ...(payload.aProvencal != null || payload.a_provencal != null ? { aProvencal: payload.aProvencal ?? payload.a_provencal } : {}),
-  };
-}
-
-// --- Response normalizers (defensive back-compat) ---
-function normalizeArticleOut(a = {}) {
-  return {
-    ...a,
-    imageUrl: a.imageUrl ?? a.image_url ?? a.src ?? '',
-    sourceUrl: a.sourceUrl ?? a.source_url ?? '',
-    imageStored: a.imageStored ?? a.image_stored ?? false,
-  };
-}
-
-function normalizeMotOut(m = {}) {
-  return {
-    ...m,
-    motsFrancais: m.motsFrancais ?? m.mots_francais ?? '',
-    motsProvencal: m.motsProvencal ?? m.mots_provencal ?? '',
-    synonymesFrancais: m.synonymesFrancais ?? m.synonymes_francais ?? '',
-    egProvencal: m.egProvencal ?? m.eg_provencal ?? '',
-    dProvencal: m.dProvencal ?? m.d_provencal ?? '',
-    aProvencal: m.aProvencal ?? m.a_provencal ?? '',
-    // keep theme/categorie/description as-is (already same name in API)
-  };
-}
-
-// --- Histoires: response normalizers (menu + détail) ---
-function normalizeHistoireOut(h = {}) {
-  return {
-    ...h,
-    descriptionCourte: h.descriptionCourte ?? h.description_courte ?? '',
-    descriptionLongue: h.descriptionLongue ?? h.description_longue ?? '',
-    sourceUrl: h.sourceUrl ?? h.source_url ?? '',
-    // titre/typologie/periode are already camelCase in API (but keep as-is)
-  };
-}
-
-function normalizeMenuItemOut(item = {}) {
-  return {
-    ...item,
-    descriptionCourte: item.descriptionCourte ?? item.description_courte ?? '',
-  };
-}
-
-// --- Cartes (Géographie): response normalizers ---
-function normalizeCarteOut(c = {}) {
-  return {
-    ...c,
-    iframeUrl: c.iframeUrl ?? c.iframe_url ?? '',
-    // legende/titre are camelCase already via API aliases, but keep back-compat
-    legende: c.legende ?? c.legende ?? '',
-    imageStored: c.imageStored ?? c.image_stored ?? false,
-  };
-}
-
-function normalizeCartePayload(payload = {}) {
-  const rawIframe = payload.iframeUrl ?? payload.iframe_url;
-  const hasIframe = typeof rawIframe === 'string' ? rawIframe.trim() !== '' : rawIframe != null;
-  return {
-    ...(payload.titre != null ? { titre: payload.titre } : {}),
-    ...(payload.iframeUrl != null || payload.iframe_url != null
-      ? { iframeUrl: hasIframe ? (typeof rawIframe === 'string' ? rawIframe.trim() : rawIframe) : null }
-      : {}),
-    ...(payload.legende != null ? { legende: payload.legende } : {}),
-  };
-}
-
-/**
- * Shape attendu:
- * {
- *   [typologie]: {
- *     [periode]: [{ id, titre, descriptionCourte }]
- *   }
- * }
- */
-function normalizeMenuHistoiresOut(menu = {}) {
-  if (!menu || typeof menu !== 'object') return {};
-
-  const out = {};
-  for (const [typologie, periodes] of Object.entries(menu)) {
-    const periodesObj = periodes && typeof periodes === 'object' ? periodes : {};
-    out[typologie] = {};
-
-    for (const [periode, items] of Object.entries(periodesObj)) {
-      out[typologie][periode] = Array.isArray(items) ? items.map(normalizeMenuItemOut) : [];
-    }
-  }
-  return out;
-}
+// Normalizers moved to src/services/normalizers.js
 
 // ==========================
 //        AXIOS INSTANCES
@@ -233,6 +126,15 @@ export const getArticles = () =>
     ...res,
     data: Array.isArray(res.data) ? res.data.map(normalizeArticleOut) : res.data,
   }));
+
+// Paged articles (skip/limit). page is 1-based.
+export const getArticlesPaged = ({ page = 1, limit = 10 } = {}) => {
+  const skip = Math.max(0, (page - 1) * limit);
+  return http.get(`/articles`, { params: { skip, limit } }).then((res) => ({
+    ...res,
+    data: Array.isArray(res.data) ? res.data.map(normalizeArticleOut) : res.data,
+  }));
+};
 
 // Create a new article (authenticated)
 export async function createArticle(payload) {
@@ -302,6 +204,15 @@ export const getCartes = (params) =>
     ...res,
     data: Array.isArray(res.data) ? res.data.map(normalizeCarteOut) : res.data,
   }));
+
+// Paged cartes (convert page -> skip). page is 1-based.
+export const getCartesPaged = ({ page = 1, limit = 10 } = {}) => {
+  const skip = Math.max(0, (page - 1) * limit);
+  return http.get(`/cartes`, { params: { skip, limit } }).then((res) => ({
+    ...res,
+    data: Array.isArray(res.data) ? res.data.map(normalizeCarteOut) : res.data,
+  }));
+};
 
 export async function createCarte(payload) {
   const { data } = await authHttp.post(`/cartes`, normalizeCartePayload(payload), {

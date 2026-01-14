@@ -2,6 +2,7 @@
 import { useMemo, useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import ApiAlert from './ApiAlert';
+import { toastError, toastSuccess } from '../utils/notify';
 import { deleteArticle, deleteArticleImage, getApiErrorMessage, getArticleImageUrl, updateArticle, uploadArticleImage } from '../services/api';
 
 const MAX_IMAGE_BYTES = 2 * 1024 * 1024;
@@ -119,6 +120,7 @@ export default function ArticleCard({
     } catch (err) {
       const msg = getApiErrorMessage(err) || "Une erreur est survenue lors de la mise à jour.";
       setErrorMsg(msg);
+      toastError(msg);
       const field = err?.response?.data?.detail?.field;
       if (field) setFieldErrors({ [field]: msg });
     } finally {
@@ -170,8 +172,10 @@ export default function ArticleCard({
                 try {
                   await deleteArticle(id);
                   if (typeof onDeleted === 'function') onDeleted(id);
+                  toastSuccess('Article supprimé.');
                 } catch (err) {
                   setErrorMsg(getApiErrorMessage(err) || 'Impossible de supprimer.');
+                  toastError(getApiErrorMessage(err) || 'Impossible de supprimer.');
                 } finally {
                   setDeleting(false);
                 }
@@ -268,6 +272,7 @@ export default function ArticleCard({
                       if (typeof onUpdated === 'function') onUpdated(updated);
                     } catch (err) {
                       setErrorMsg(getApiErrorMessage(err) || "Impossible de retirer l'image.");
+                        toastError(getApiErrorMessage(err) || "Impossible de retirer l'image.");
                     } finally {
                       setLoading(false);
                     }
