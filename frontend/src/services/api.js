@@ -452,3 +452,8 @@ export function getApiErrorMessage(err) {
   if (status === 429 && retryAfter) return `${base} (Retry-After: ${retryAfter}s)`;
   return base;
 }
+
+// Retourne le champ ciblé par l'erreur si fourni par l'API (ex: { detail: { field: 'titre' } })
+export function getApiErrorField(err) {
+  return err?.response?.data?.detail?.field ?? null;
+}

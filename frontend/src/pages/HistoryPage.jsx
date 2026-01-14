@@ -3,7 +3,7 @@ import ApiAlert from '../components/ApiAlert';
 import Loader from '../components/Loader';
 import { useAuth } from '../hooks/useAuth';
 import { logError } from '../utils/logger';
-import { createHistoire, deleteHistoire, getHistoireById, getMenuHistoires, updateHistoire } from '../services/api';
+import { createHistoire, deleteHistoire, getHistoireById, getMenuHistoires, updateHistoire, getApiErrorMessage, getApiErrorField } from '../services/api';
 
 export default function HistoryPage() {
   const { user, ready } = useAuth();
@@ -26,6 +26,7 @@ export default function HistoryPage() {
   const [loading, setLoading] = useState(true);
   const [loadingDetail, setLoadingDetail] = useState(false);
   const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState({});
 
   useEffect(() => {
     async function fetchMenu() {
@@ -104,6 +105,7 @@ export default function HistoryPage() {
   const saveEditing = async () => {
     if (!selected || !editForm) return;
     setError('');
+    setFieldErrors({});
     try {
       const updated = await updateHistoire(selected.id, editForm);
       setSelected(updated);
@@ -112,7 +114,10 @@ export default function HistoryPage() {
       await refreshMenu();
     } catch (err) {
       logError(err);
-      setError("Impossible de modifier cette histoire.");
+      const msg = getApiErrorMessage(err);
+      setError(msg || "Impossible de modifier cette histoire.");
+      const field = getApiErrorField(err);
+      if (field) setFieldErrors({ [field]: msg });
     }
   };
 
@@ -121,6 +126,7 @@ export default function HistoryPage() {
     const ok = window.confirm('Supprimer cette histoire ?');
     if (!ok) return;
     setError('');
+    setFieldErrors({});
     try {
       await deleteHistoire(selected.id);
       setSelected(null);
@@ -129,13 +135,15 @@ export default function HistoryPage() {
       await refreshMenu();
     } catch (err) {
       logError(err);
-      setError("Impossible de supprimer cette histoire.");
+      const msg = getApiErrorMessage(err);
+      setError(msg || "Impossible de supprimer cette histoire.");
     }
   };
 
   const submitCreate = async (e) => {
     e.preventDefault();
     setError('');
+    setFieldErrors({});
     try {
       const created = await createHistoire(createForm);
       setCreateForm({
@@ -151,7 +159,10 @@ export default function HistoryPage() {
       await openDetail(created.id);
     } catch (err) {
       logError(err);
-      setError("Impossible de créer une histoire.");
+      const msg = getApiErrorMessage(err);
+      setError(msg || "Impossible de créer une histoire.");
+      const field = getApiErrorField(err);
+      if (field) setFieldErrors({ [field]: msg });
     }
   };
 
@@ -224,6 +235,7 @@ export default function HistoryPage() {
                         value={editForm?.titre ?? ''}
                         onChange={(e) => setEditForm((f) => ({ ...f, titre: e.target.value }))}
                       />
+                      {fieldErrors.titre && <div className="text-red-600 text-sm mt-1">{fieldErrors.titre}</div>}
                     </div>
                     <div>
                       <label className="block text-sm font-semibold mb-1">Typologie</label>
@@ -232,6 +244,7 @@ export default function HistoryPage() {
                         value={editForm?.typologie ?? ''}
                         onChange={(e) => setEditForm((f) => ({ ...f, typologie: e.target.value }))}
                       />
+                      {fieldErrors.typologie && <div className="text-red-600 text-sm mt-1">{fieldErrors.typologie}</div>}
                     </div>
                     <div>
                       <label className="block text-sm font-semibold mb-1">Période</label>
@@ -240,6 +253,7 @@ export default function HistoryPage() {
                         value={editForm?.periode ?? ''}
                         onChange={(e) => setEditForm((f) => ({ ...f, periode: e.target.value }))}
                       />
+                      {fieldErrors.periode && <div className="text-red-600 text-sm mt-1">{fieldErrors.periode}</div>}
                     </div>
                     <div>
                       <label className="block text-sm font-semibold mb-1">Légende courte (survol)</label>
@@ -248,6 +262,7 @@ export default function HistoryPage() {
                         value={editForm?.descriptionCourte ?? ''}
                         onChange={(e) => setEditForm((f) => ({ ...f, descriptionCourte: e.target.value }))}
                       />
+                      {fieldErrors.descriptionCourte && <div className="text-red-600 text-sm mt-1">{fieldErrors.descriptionCourte}</div>}
                     </div>
                   </div>
 
@@ -322,6 +337,7 @@ export default function HistoryPage() {
                     value={createForm.titre}
                     onChange={(e) => setCreateForm((f) => ({ ...f, titre: e.target.value }))}
                   />
+                  {fieldErrors.titre && <div className="text-red-600 text-sm mt-1">{fieldErrors.titre}</div>}
                 </div>
                 <div>
                   <label className="block text-sm font-semibold mb-1">Typologie *</label>
@@ -331,6 +347,7 @@ export default function HistoryPage() {
                     value={createForm.typologie}
                     onChange={(e) => setCreateForm((f) => ({ ...f, typologie: e.target.value }))}
                   />
+                  {fieldErrors.typologie && <div className="text-red-600 text-sm mt-1">{fieldErrors.typologie}</div>}
                 </div>
                 <div>
                   <label className="block text-sm font-semibold mb-1">Période *</label>
@@ -340,6 +357,7 @@ export default function HistoryPage() {
                     value={createForm.periode}
                     onChange={(e) => setCreateForm((f) => ({ ...f, periode: e.target.value }))}
                   />
+                  {fieldErrors.periode && <div className="text-red-600 text-sm mt-1">{fieldErrors.periode}</div>}
                 </div>
                 <div>
                   <label className="block text-sm font-semibold mb-1">Légende courte (survol)</label>
@@ -348,6 +366,7 @@ export default function HistoryPage() {
                     value={createForm.descriptionCourte}
                     onChange={(e) => setCreateForm((f) => ({ ...f, descriptionCourte: e.target.value }))}
                   />
+                  {fieldErrors.descriptionCourte && <div className="text-red-600 text-sm mt-1">{fieldErrors.descriptionCourte}</div>}
                 </div>
               </div>
 

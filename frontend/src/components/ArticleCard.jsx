@@ -35,6 +35,7 @@ export default function ArticleCard({
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState(null);
+  const [fieldErrors, setFieldErrors] = useState({});
 
   const [imageFile, setImageFile] = useState(null);
   const [imageRev, setImageRev] = useState(0);
@@ -58,6 +59,7 @@ export default function ArticleCard({
 
   const startEdit = () => {
     setErrorMsg(null);
+    setFieldErrors({});
     setForm({ ...view });
     setImageFile(null);
     setIsEditing(true);
@@ -65,6 +67,7 @@ export default function ArticleCard({
 
   const cancelEdit = () => {
     setErrorMsg(null);
+    setFieldErrors({});
     setForm({ ...view });
     setImageFile(null);
     setIsEditing(false);
@@ -114,7 +117,10 @@ export default function ArticleCard({
 
       if (typeof onUpdated === 'function') onUpdated(updated);
     } catch (err) {
-      setErrorMsg(getApiErrorMessage(err) || "Une erreur est survenue lors de la mise à jour.");
+      const msg = getApiErrorMessage(err) || "Une erreur est survenue lors de la mise à jour.";
+      setErrorMsg(msg);
+      const field = err?.response?.data?.detail?.field;
+      if (field) setFieldErrors({ [field]: msg });
     } finally {
       setLoading(false);
     }
@@ -280,10 +286,12 @@ export default function ArticleCard({
               <div>
                 <label className="text-sm font-medium" htmlFor={`titre-${id}`}>Titre</label>
                 <input id={`titre-${id}`} type="text" value={form.titre} onChange={(e) => handleChange('titre', e.target.value)} className="input" />
+                {fieldErrors.titre && <div className="text-red-600 text-sm mt-1">{fieldErrors.titre}</div>}
               </div>
               <div>
                 <label className="text-sm font-medium" htmlFor={`desc-${id}`}>Description</label>
                 <textarea id={`desc-${id}`} value={form.description} onChange={(e) => handleChange('description', e.target.value)} rows={3} className="input" />
+                {fieldErrors.description && <div className="text-red-600 text-sm mt-1">{fieldErrors.description}</div>}
               </div>
               <div>
                 <label className="text-sm font-medium" htmlFor={`src-${id}`}>URL de la source</label>
@@ -296,6 +304,7 @@ export default function ArticleCard({
                   className="input"
                 />
                 {!isValidUrl(form.sourceUrl) && form.sourceUrl && <div className="text-xs text-red-600">URL non valide</div>}
+                {fieldErrors.sourceUrl && <div className="text-red-600 text-sm mt-1">{fieldErrors.sourceUrl}</div>}
               </div>
             </div>
           )}

@@ -14,6 +14,8 @@ from app.utils.security import require_authenticated
 from app.services import articles as articles_service
 from app.services.errors import NotFoundError, ValidationError
 from app.utils.http_errors import http_error
+from sqlalchemy.exc import DataError, IntegrityError, StatementError
+from app.utils.db_errors import format_db_exception
 from app.utils.images import validate_image_upload
 
 router = APIRouter()
@@ -48,6 +50,9 @@ def create_article(
         return articles_service.create_article_service(db, article_in=article)
     except ValidationError as e:
         raise http_error(422, code="validation_error", message=str(e), field="titre")
+    except (DataError, IntegrityError, StatementError) as e:
+        user_msg, field, err_type = format_db_exception(e)
+        raise http_error(400, code="db_error", message=user_msg, field=field, extra={"sql_error": err_type})
 
 
 # ✅ Mettre à jour un article (auth requis)
@@ -64,6 +69,9 @@ def update_article(
         raise http_error(404, code="not_found", message=f"{e} (resource=article id={article_id})")
     except ValidationError as e:
         raise http_error(422, code="validation_error", message=str(e), field="titre")
+    except (DataError, IntegrityError, StatementError) as e:
+        user_msg, field, err_type = format_db_exception(e)
+        raise http_error(400, code="db_error", message=user_msg, field=field, extra={"sql_error": err_type})
 
 
 # ✅ Supprimer un article (auth requis)
@@ -104,6 +112,9 @@ async def upload_article_image(
         raise http_error(413, code="validation_error", message=str(e), field="image")
     except NotFoundError as e:
         raise http_error(404, code="not_found", message=f"{e} (resource=article id={article_id})")
+    except (DataError, IntegrityError, StatementError) as e:
+        user_msg, field, err_type = format_db_exception(e)
+        raise http_error(400, code="db_error", message=user_msg, field=field, extra={"sql_error": err_type})
 
 
 @router.delete("/{article_id}/image", response_model=ArticleOut)

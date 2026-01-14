@@ -8,6 +8,8 @@ from app.utils.security import require_authenticated
 from app.services import dictionnaire as dict_service
 from app.services.errors import NotFoundError, ValidationError
 from app.utils.http_errors import http_error
+from sqlalchemy.exc import DataError, IntegrityError, StatementError
+from app.utils.db_errors import format_db_exception
 
 router = APIRouter()
 
@@ -63,6 +65,9 @@ def create_mot(
         return dict_service.create_mot_service(db, mot_in=mot)
     except ValidationError as e:
         raise http_error(422, code="validation_error", message=str(e), field="motsFrancais")
+    except (DataError, IntegrityError, StatementError) as e:
+        user_msg, field, err_type = format_db_exception(e)
+        raise http_error(400, code="db_error", message=user_msg, field=field, extra={"sql_error": err_type})
 
 
 # ✅ Mettre à jour un mot (auth requis)
@@ -79,6 +84,9 @@ def update_mot(
         raise http_error(404, code="not_found", message=f"{e} (resource=dictionnaire id={mot_id})")
     except ValidationError as e:
         raise http_error(422, code="validation_error", message=str(e), field="motsFrancais")
+    except (DataError, IntegrityError, StatementError) as e:
+        user_msg, field, err_type = format_db_exception(e)
+        raise http_error(400, code="db_error", message=user_msg, field=field, extra={"sql_error": err_type})
 
 
 # ✅ Supprimer un mot (auth requis)

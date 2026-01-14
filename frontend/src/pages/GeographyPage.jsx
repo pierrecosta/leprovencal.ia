@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import ApiAlert from '../components/ApiAlert';
 import Loader from '../components/Loader';
 import { useAuth } from '../hooks/useAuth';
-import { createCarte, deleteCarte, deleteCarteImage, getCarteImageUrl, getCartes, updateCarte, uploadCarteImage } from '../services/api';
+import { createCarte, deleteCarte, deleteCarteImage, getCarteImageUrl, getCartes, updateCarte, uploadCarteImage, getApiErrorMessage, getApiErrorField } from '../services/api';
 import { logError } from '../utils/logger';
 
 const MAX_IMAGE_BYTES = 2 * 1024 * 1024;
@@ -11,6 +11,7 @@ export default function GeographyPage() {
   const { user, ready } = useAuth();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState({});
   const [items, setItems] = useState([]);
 
   const [imgRevById, setImgRevById] = useState({});
@@ -51,17 +52,20 @@ export default function GeographyPage() {
       legende: carte.legende ?? '',
     });
     setEditImageFile(null);
+    setFieldErrors({});
   };
 
   const cancelEdit = () => {
     setEditingId(null);
     setEditForm({ titre: '', iframeUrl: '', legende: '' });
     setEditImageFile(null);
+    setFieldErrors({});
   };
 
   const saveEdit = async () => {
     if (!editingId) return;
     setError('');
+    setFieldErrors({});
     try {
       let updated = await updateCarte(editingId, editForm);
       if (editImageFile) {
@@ -73,7 +77,10 @@ export default function GeographyPage() {
       cancelEdit();
     } catch (err) {
       logError(err);
-      setError("Impossible de modifier la carte.");
+      const msg = getApiErrorMessage(err);
+      setError(msg || "Impossible de modifier la carte.");
+      const field = getApiErrorField(err);
+      if (field) setFieldErrors({ [field]: msg });
     }
   };
 
@@ -81,19 +88,22 @@ export default function GeographyPage() {
     const ok = window.confirm('Supprimer cette carte ?');
     if (!ok) return;
     setError('');
+    setFieldErrors({});
     try {
       await deleteCarte(id);
       setItems((prev) => prev.filter((c) => c.id !== id));
       if (editingId === id) cancelEdit();
     } catch (err) {
       logError(err);
-      setError("Impossible de supprimer la carte.");
+      const msg = getApiErrorMessage(err);
+      setError(msg || "Impossible de supprimer la carte.");
     }
   };
 
   const submitCreate = async (e) => {
     e.preventDefault();
     setError('');
+    setFieldErrors({});
     const titre = (createForm.titre || '').trim();
     const iframeUrl = (createForm.iframeUrl || '').trim();
     if (!titre) return setError('Le titre est obligatoire.');
@@ -122,7 +132,10 @@ export default function GeographyPage() {
       setCreating(false);
     } catch (err) {
       logError(err);
-      setError("Impossible de créer la carte.");
+      const msg = getApiErrorMessage(err);
+      setError(msg || "Impossible de créer la carte.");
+      const field = getApiErrorField(err);
+      if (field) setFieldErrors({ [field]: msg });
     }
   };
 
@@ -151,6 +164,7 @@ export default function GeographyPage() {
                   value={createForm.titre}
                   onChange={(e) => setCreateForm((f) => ({ ...f, titre: e.target.value }))}
                 />
+                {fieldErrors.titre && <div className="text-red-600 text-sm mt-1">{fieldErrors.titre}</div>}
               </div>
               <div>
                 <label className="block text-sm font-semibold mb-1">Iframe URL (optionnel si image)</label>
@@ -159,6 +173,7 @@ export default function GeographyPage() {
                   value={createForm.iframeUrl}
                   onChange={(e) => setCreateForm((f) => ({ ...f, iframeUrl: e.target.value }))}
                 />
+                {fieldErrors.iframeUrl && <div className="text-red-600 text-sm mt-1">{fieldErrors.iframeUrl}</div>}
               </div>
               <div>
                 <label className="block text-sm font-semibold mb-1">Légende</label>
@@ -167,6 +182,7 @@ export default function GeographyPage() {
                   value={createForm.legende}
                   onChange={(e) => setCreateForm((f) => ({ ...f, legende: e.target.value }))}
                 />
+                {fieldErrors.legende && <div className="text-red-600 text-sm mt-1">{fieldErrors.legende}</div>}
               </div>
               <div className="md:col-span-3">
                 <label className="block text-sm font-semibold mb-1">Image (fichier) (optionnel, &lt; 2Mo)</label>
@@ -234,6 +250,7 @@ export default function GeographyPage() {
                         value={editForm.titre}
                         onChange={(e) => setEditForm((f) => ({ ...f, titre: e.target.value }))}
                       />
+                      {fieldErrors.titre && <div className="text-red-600 text-sm mt-1">{fieldErrors.titre}</div>}
                     </div>
                     <div>
                       <label className="block text-sm font-semibold mb-1">Iframe URL</label>
@@ -242,6 +259,7 @@ export default function GeographyPage() {
                         value={editForm.iframeUrl}
                         onChange={(e) => setEditForm((f) => ({ ...f, iframeUrl: e.target.value }))}
                       />
+                      {fieldErrors.iframeUrl && <div className="text-red-600 text-sm mt-1">{fieldErrors.iframeUrl}</div>}
                     </div>
                     <div>
                       <label className="block text-sm font-semibold mb-1">Légende</label>
@@ -250,6 +268,7 @@ export default function GeographyPage() {
                         value={editForm.legende}
                         onChange={(e) => setEditForm((f) => ({ ...f, legende: e.target.value }))}
                       />
+                      {fieldErrors.legende && <div className="text-red-600 text-sm mt-1">{fieldErrors.legende}</div>}
                     </div>
                     <div>
                       <label className="block text-sm font-semibold mb-1">Image (fichier) (optionnel, &lt; 2Mo)</label>

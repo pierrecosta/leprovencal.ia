@@ -20,4 +20,8 @@ def http_error(
     if field:
         detail["field"] = str(field)
 
+    # Allow callers to attach arbitrary extra information (kept under `extra`).
+    if extra:
+        detail["extra"] = extra
+
     return HTTPException(status_code=status_code, detail=detail, headers=headers)

@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from 'react';
-import { createArticle, getArticles, uploadArticleImage } from '../services/api';
+import { createArticle, getArticles, uploadArticleImage, getApiErrorMessage, getApiErrorField } from '../services/api';
 import ArticleCard from '../components/ArticleCard';
 import Loader from '../components/Loader';
 import { useAuth } from '../hooks/useAuth';
@@ -12,6 +12,7 @@ export default function HomePage() {
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState({});
   const [newArticle, setNewArticle] = useState({ titre: '', description: '' });
   const [newImageFile, setNewImageFile] = useState(null);
   const [adding, setAdding] = useState(false);
@@ -51,6 +52,7 @@ export default function HomePage() {
                 e.preventDefault();
                 if (!newArticle.titre.trim()) return;
                 setAdding(true);
+                setFieldErrors({});
                 try {
                   let created = await createArticle(newArticle);
                   if (newImageFile) {
@@ -61,7 +63,10 @@ export default function HomePage() {
                   setNewImageFile(null);
                   setCreating(false);
                 } catch (err) {
-                  // keep minimal
+                  const msg = getApiErrorMessage(err);
+                  setError(msg || "Impossible de créer l'article.");
+                  const field = getApiErrorField(err);
+                  if (field) setFieldErrors({ [field]: msg });
                 } finally {
                   setAdding(false);
                 }
@@ -78,6 +83,7 @@ export default function HomePage() {
                     onChange={(e) => setNewArticle({ ...newArticle, titre: e.target.value })}
                     required
                   />
+                  {fieldErrors.titre && <div className="text-red-600 text-sm mt-1">{fieldErrors.titre}</div>}
                 </div>
                 <div>
                   <label className="block text-sm font-semibold mb-1">Image (fichier) (optionnel, &lt; 2Mo)</label>
@@ -108,7 +114,10 @@ export default function HomePage() {
                   className="input"
                   placeholder="Résumé"
                   value={newArticle.description}
-                  onChange={(e) => setNewArticle({ ...newArticle, description: e.target.value })}
+                  onChange={(e) => {
+                    setNewArticle({ ...newArticle, description: e.target.value });
+                    setFieldErrors({});
+                  }}
                 />
               </div>
 
@@ -119,7 +128,6 @@ export default function HomePage() {
           )}
         </section>
       )}
-
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {articles.map((article) => (
           <ArticleCard

@@ -7,6 +7,8 @@ from app.schemas import HistoireCreate, HistoireUpdate, HistoireOut
 from app.utils.security import require_authenticated
 from app.services import histoires as histoires_service
 from app.services.errors import NotFoundError, ValidationError
+from sqlalchemy.exc import DataError, IntegrityError, StatementError
+from app.utils.db_errors import format_db_exception
 from app.utils.http_errors import http_error
 
 router = APIRouter()
@@ -52,6 +54,10 @@ def create_histoire(
         return histoires_service.create_histoire_service(db, histoire_in=histoire)
     except ValidationError as e:
         raise http_error(422, code="validation_error", message=str(e))
+    except (DataError, IntegrityError, StatementError) as e:
+        # Convert DB error to user-friendly message and include optional field
+        user_msg, field, err_type = format_db_exception(e)
+        raise http_error(400, code="db_error", message=user_msg, field=field, extra={"sql_error": err_type})
 
 
 # Mettre à jour une histoire (auth requis)
@@ -68,6 +74,9 @@ def update_histoire(
         raise http_error(404, code="not_found", message=str(e), extra={"resource": "histoire", "id": histoire_id})
     except ValidationError as e:
         raise http_error(422, code="validation_error", message=str(e))
+    except (DataError, IntegrityError, StatementError) as e:
+        user_msg, field, err_type = format_db_exception(e)
+        raise http_error(400, code="db_error", message=user_msg, field=field, extra={"sql_error": err_type})
 
 
 # Supprimer une histoire (auth requis)
