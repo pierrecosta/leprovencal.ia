@@ -1,108 +1,122 @@
-# ACTIONS — Priorités et découpage optimisé (Frontend)
+# Feature — Migration **Big Bang** vers **Vite + React + TypeScript** + refonte d’architecture
 
-Ce fichier regroupe les actions prioritaires pour améliorer, rationaliser, nettoyer et rendre cohérent le code frontend.
+## Contexte (3 lignes)
+Notre front React (JavaScript) présente des disparités de conventions, une dette technique croissante et des coûts élevés de maintenance.
+Les builds et boucles de dev deviennent moins prévisibles à mesure que le codebase grandit et que les extensions/outils divergent.
+Nous lançons une migration **big bang** vers **Vite + React TS** avec **refactor fonctionnel majeur** et **refonte d’architecture** pour standardiser.
 
-## Objectifs
-- Respecter les bonnes pratiques (sécurité, tests, accessibilité).
-- Rationaliser la base de code pour faciliter la maintenance.
-- Nettoyer le code inutilisé ou redondant.
-- Standardiser conventions et architecture.
-- Fournir un découpage d'implémentation par étapes prioritaires.
+## Objectif (5 lignes)
+Basculer l’application en **Vite + React + TypeScript** en une seule livraison (big bang) et retirer l’ancienne stack.
+Refondre l’architecture applicative (découpage, responsabilités, structure) afin de rendre le code **nettement plus maintenable**.
+Mener une **refactorisation fonctionnelle majeure** pour clarifier les parcours, éliminer les doublons et stabiliser les comportements.
+Mettre en place un outillage homogène et “quality-first” (ESLint + Prettier) avec règles partagées et appliquées en CI.
+Améliorer la vitesse de dev/build et garantir une expérience développeur uniforme sur tous les environnements.
 
----
+## Scope (10 lignes)
+1. Création du nouveau socle **Vite + React TS** (scripts, conventions, structure `src/`, gestion assets, env vars).
+2. Mise en place TypeScript strict **progressif** mais avec un objectif de base typée (interdiction d’`any` non justifié).
+3. Mise en place de l’outillage qualité : **ESLint + Prettier** + hooks (optionnel) + exécution en CI.
+4. Refonte d’architecture : séparation `app/`, `features/`, `shared/`, `entities/` (ou équivalent validé) + règles d’import.
+5. Refonte des patterns : routing, gestion d’état, data-fetching, gestion erreurs, configuration, i18n (selon existant).
+6. Migration **totale** du code (composants, pages, services, utilitaires) vers `.ts/.tsx`.
+7. Refactor fonctionnel majeur : simplification des parcours clés, harmonisation UI/UX, suppression legacy et dead code.
+8. Alignement styles/outils : normalisation conventions (naming, lint rules, formatting) et suppression des exceptions locales.
+9. Mise à jour du build et des environnements : configuration dev/prod, variables, proxy, bundling, optimisations.
+10. Validation complète : tests (unit/integration/e2e si applicable), smoke tests, performance baseline et critères de non-régression.
 
-## Priorités (Haute / Moyenne / Basse)
+## Hors scope
+- Aucun : migration big bang implique une bascule complète et la décommission de l’ancienne stack dans la même release.
 
-### Priorité Haute
-- 1. Stratégie d'authentification claire (token vs cookie HttpOnly) — confirmer et implémenter. (Fichiers: `src/services/api.js`, `src/hooks/useAuth.js`) — Effort: moyen.
-- 2. Corriger persistence / re-hydratation de l'utilisateur (si token côté client requis) ou documenter explicitement l'usage de cookies. (Effort: moyen)
-- 3. Implémenter validation & filtrage des URLs d'iframe (sécurité) dans `GeographyPage`. (Fichiers: `src/pages/GeographyPage.jsx`, `src/services/api.js`) — Effort: petit.
-- 4. Ajouter tests unitaires pour `services/api.js` et `useDictionary`. (Effort: moyen)
+## Livrables
+- Application fonctionnelle en **Vite + React TS** (plus aucune dépendance à l’ancienne chaîne de build).
+- Nouvelle architecture de dossiers + règles d’import + documentation courte (README / ADR).
+- ESLint + Prettier opérationnels en local et en CI.
+- Jeux de tests et smoke tests mis à jour + rapport de non-régression.
 
-### Priorité Moyenne
-- 5. Supprimer ou implémenter `src/hooks/usePagination.js` (actuellement vide). (Effort: petit)
-- 6. Extraire et regrouper les normalizers de `src/services/api.js` dans `src/services/normalizers.js` pour lisibilité et testabilité. (Effort: moyen)
-- 7. Centraliser la gestion des erreurs / notifications (composant `Toast` ou `ErrorBoundary`). (Effort: moyen)
-
-### Priorité Basse
-- 8. Standardiser l'utilisation Tailwind vs classes CSS custom (préférer utilitaires Tailwind pour nouveaux composants). (Effort: moyen)
-- 9. Ajouter CI: lint, format, tests (GitHub Actions). (Effort: moyen)
-- 10. Auditer et réduire les CSS redondants dans `theme.css` (tokenisation déjà bonne). (Effort: petit/moyen)
-
----
-
-## Découpage par thématique (actions détaillées)
-
-1) Bonnes pratiques de développement
-- A. Auth: décider stockage du token
-  - Option A: cookie HttpOnly (recommandé) — modifier backend si nécessaire; retirer stockage in-memory pour persistance. Fichiers impactés: `src/services/api.js`, `src/hooks/useAuth.js`.
-  - Option B: access token persistant (localStorage/sessionStorage) — ajouter chiffrement façon sécurisée et revalidation (refresh token). Documenter risques XSS.
-- B. Tests: ajouter suites Jest/React Testing Library pour
-  - `src/services/api.js` (mock axios)
-  - `src/hooks/useDictionary.js`
-  - Composants critiques: `ArticleCard.jsx`, `GeographyPage.jsx`, `HistoryPage.jsx`.
-- C. Linting & formatting: ajouter ESLint + Prettier config et hook pre-commit (`husky`, `lint-staged`).
-
-2) Rationalisation du code existant
-- A. Refactor `services/api.js`:
-  - Extraire normalizers (articles, dictionnaire, histoires, cartes) dans `src/services/normalizers.js`.
-  - Extraire gestion token / auth helpers dans `src/services/auth.js` si nécessaire.
-- B. Factoriser constantes communes (ex: `MAX_IMAGE_BYTES`) dans `src/config/constants.js`.
-- C. Centraliser les messages d'erreur et mapping de champs (facilite i18n ultérieur).
-
-3) Nettoyage (code non utilisé / redondant)
-- A. Supprimer `src/hooks/usePagination.js` s'il n'est pas utilisé.
-- B. Rechercher et supprimer imports inutilisés (logo.svg, fichiers orphelins).
-- C. Supprimer commentaires morts et code commenté inutile.
-
-4) Cohérence globale
-- A. Conventions de nommage: garder camelCase côté frontend; garder normalizers pour back-compat snake_case.
-- B. Classes CSS vs Tailwind: recommander guide style (ex: components stylés via Tailwind, variables dans `theme.css` pour tokens uniquement).
-- C. Accessibilité: vérifier `aria-*`, focus-visible, keyboard handlers existants (déjà présent); compléter où manquant.
-
-5) Implémentation — Plan pas-à-pas recommandé
-- Sprint 1 (1–3 jours):
-  1. Mettre à jour `ACTIONS.md` (ce fichier).
-  2. Décider stratégie d'auth (réunion rapide, choix cookie HttpOnly idéal).
-  3. Implémenter ou documenter persistance token; adapter `src/services/api.js` (setToken) et `useAuth` re-hydratation.
-
-- Sprint 2 (2–4 jours):
-  1. Extraire `normalizers.js` et refactor `services/api.js` pour l'utiliser.
-  2. Implémenter validations iframe et URL sur `GeographyPage` et `ArticleCard`.
-  3. Supprimer/implémenter `usePagination.js`.
-
-- Sprint 3 (2–3 jours):
-  1. Écrire tests unitaires pour `services/api.js` et `useDictionary`.
-  2. Ajouter linter/formatter et CI (lint + test). Commit hooks `lint-staged`.
-  3. Centraliser error/toast component et remplacer messages inline.
-
-- Sprint 4 (améliorations continues):
-  1. Auditer et nettoyer `theme.css` (supprimer règles inutilisées).
-  2. Ajouter tests E2E si nécessaire.
+## Critères d’acceptation
+- `npm ci` puis `npm run dev` démarre l’app sans erreur bloquante.
+- `npm run build` réussit (prod) et `npm run preview` sert le build.
+- `npm run lint` et `npm run format:check` passent en local et en CI.
+- 100% du code applicatif (hors exceptions documentées) en `.ts/.tsx`.
+- Architecture cible appliquée (structure + conventions + règles d’import) et documentée.
+- Parcours fonctionnels prioritaires validés (liste en section “Tests & validation”).
 
 ---
 
-## Estimations rapides & effort
-- Petits changements: validation iframe, suppression `usePagination.js`, constantes partagées — 0.5–1 jour.
-- Moyens: refactor `services/api.js`, extraire normalizers, ajouter tests unitaires — 2–4 jours.
-- Lourds: changement profond de la stratégie d'auth (ajout refresh tokens/cookies côté backend), CI complète, E2E — 3–7 jours selon backend.
+# Backlog — Tâches techniques (liste exhaustive)
 
----
+## 0) Préparation & cadrage
+- [ ] Inventorier la stack actuelle : bundler, scripts, dépendances, polyfills, env vars, alias, assets.
+- [ ] Définir l’architecture cible (dossiers, boundaries, règles d’import) + écrire une ADR.
+- [ ] Définir la stratégie de refacto fonctionnelle : parcours prioritaires, règles de non-régression, critères UX.
+- [ ] Geler les features non critiques pendant la migration (sprint dédié) + plan de communication.
 
-## Liens utiles (fichiers à consulter)
-- Routage: `src/App.jsx`
-- Auth: `src/hooks/useAuth.js` ; `src/services/api.js`
-- Services/API: `src/services/api.js`
-- Pages principales: `src/pages/*` (`GeographyPage.jsx`, `HistoryPage.jsx`, `DictionaryPage.jsx`)
-- Composants critiques: `src/components/ArticleCard.jsx`, `DictionaryTable.jsx`
-- Styles / tokens: `src/theme.css`
+## 1) Bootstrap Vite + React TS
+- [ ] Initialiser Vite template `react-ts`.
+- [ ] Configurer `tsconfig.json` (base strict, paths, jsx, noEmit).
+- [ ] Configurer `vite.config.ts` : alias, base, define, server proxy, build options.
+- [ ] Mettre en place la structure `src/` selon architecture cible.
+- [ ] Migrer les assets (public, icons, fonts) et vérifier les chemins.
+- [ ] Migrer la gestion des variables d’environnement (`import.meta.env`) + documentation.
 
----
+## 2) Outillage qualité (ESLint + Prettier)
+- [ ] Installer ESLint + plugins (react, react-hooks, import, jsx-a11y, @typescript-eslint).
+- [ ] Définir règles : no-explicit-any (avec exceptions), import/order, boundaries, hooks rules.
+- [ ] Installer Prettier + config + `.prettierignore`.
+- [ ] Harmoniser ESLint/Prettier (désactiver règles de style côté ESLint si Prettier).
+- [ ] Ajouter scripts : `lint`, `lint:fix`, `format`, `format:check`, `typecheck`.
+- [ ] Optionnel : husky + lint-staged (pré-commit) + commitlint.
 
-## Prochaine étape proposée
-Si tu veux, je peux commencer par implémenter l'une des actions prioritaires :
-- proposer un patch pour persistance d'auth (option choisie), ou
-- implémenter `usePagination.js`, ou
-- extraire `normalizers.js` et refactoriser `services/api.js`.
+## 3) Refactor d’architecture applicative (big bang)
+- [ ] Définir modules : `app/` (bootstrap), `shared/` (ui, lib), `features/` (use-cases), `entities/` (domain).
+- [ ] Mettre en place une règle d’import (lint) interdisant les imports transverses non autorisés.
+- [ ] Centraliser la configuration applicative : config runtime, constants, feature flags.
+- [ ] Standardiser la gestion d’erreurs : ErrorBoundary, handling API, logging.
+- [ ] Standardiser routing : structure routes, lazy loading, guards, redirections.
+- [ ] Standardiser data-fetching : client API, caching, retry, invalidation.
+- [ ] Standardiser state management : choix (context, redux, zustand…) + conventions.
+- [ ] Standardiser UI : design tokens, composants partagés, règles d’accessibilité.
 
-Indique la tâche à lancer en premier.
+## 4) Migration totale du code vers TypeScript
+- [ ] Renommer fichiers : `.js/.jsx` -> `.ts/.tsx`.
+- [ ] Ajouter types Props/State/Events sur tous les composants.
+- [ ] Introduire types domain (DTO, models) et mapping API <-> domain.
+- [ ] Éliminer `any` ; utiliser `unknown` + narrowing, generics et discriminated unions.
+- [ ] Typage des hooks personnalisés, contextes, stores.
+- [ ] Typage des services : API client, interceptors, erreurs.
+- [ ] Typage de la configuration (env vars, runtime config).
+
+## 5) Refactorisation fonctionnelle majeure
+- [ ] Revoir et simplifier les parcours “top 3” (à lister) : écrans, interactions, validations.
+- [ ] Supprimer dead code, écrans obsolètes, branches legacy, flags non utilisés.
+- [ ] Dédupliquer composants et logique (helpers, hooks, services).
+- [ ] Normaliser la gestion des formulaires (validation, erreurs, i18n).
+- [ ] Normaliser la gestion des permissions/roles (si applicable).
+- [ ] Harmoniser les comportements cross-cutting (loading states, empty states, errors, toasts).
+
+## 6) Tests & validation
+- [ ] Mettre à jour / créer tests unitaires (components, utils, domain).
+- [ ] Mettre à jour / créer tests d’intégration (API mock, routing, stores).
+- [ ] Mettre à jour / créer tests e2e (Cypress/Playwright) sur parcours critiques.
+- [ ] Définir smoke test checklist + exécution en CI (au minimum sur build).
+- [ ] Mettre en place coverage threshold (optionnel, selon maturité).
+
+## 7) Performance & DX
+- [ ] Activer code splitting / lazy loading routes.
+- [ ] Optimiser bundle : analyse, suppression deps inutiles, tree-shaking.
+- [ ] Optimiser images/assets (compression, cache headers si applicable).
+- [ ] Standardiser environnements dev : `.nvmrc`/Volta, versions Node, scripts.
+- [ ] Documenter commandes et conventions (README) + guide de contribution.
+
+## 8) CI/CD & release big bang
+- [ ] Mettre à jour pipeline CI : install, lint, format check, typecheck, build, tests.
+- [ ] Mettre à jour pipeline CD : artefacts, déploiement, variables d’env.
+- [ ] Mettre en place un plan de rollback (tag, artefacts, release précédente).
+- [ ] Exécuter une release candidate + validation UAT.
+- [ ] Décommissionner l’ancienne stack : suppression configs, scripts, docs, dépendances.
+
+## 9) Nettoyage & clôture
+- [ ] Supprimer dépendances legacy et fichiers de config obsolètes.
+- [ ] Vérifier licences/versions des dépendances.
+- [ ] Finaliser ADR + documentation + décisions d’architecture.
+- [ ] Créer tickets de suivi (tech debt résiduelle, optimisations futures).
