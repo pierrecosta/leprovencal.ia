@@ -66,6 +66,20 @@ export default function GeographyPage() {
     if (!editingId) return;
     setError('');
     setFieldErrors({});
+    // Validate iframe URL against whitelist
+    const isAllowedIframe = (raw) => {
+      if (!raw) return true;
+      try {
+        const u = new URL(raw);
+        if (!['http:', 'https:'].includes(u.protocol)) return false;
+        // allow only localhost with ports 3000 or 8000
+        if (u.hostname === 'localhost' && ['3000', '8000'].includes(u.port)) return true;
+        return false;
+      } catch {
+        return false;
+      }
+    };
+    if (editForm?.iframeUrl && !isAllowedIframe(editForm.iframeUrl)) return setError('Iframe URL non autorisée (localhost:3000 ou localhost:8000 uniquement).');
     try {
       let updated = await updateCarte(editingId, editForm);
       if (editImageFile) {
@@ -107,7 +121,20 @@ export default function GeographyPage() {
     const titre = (createForm.titre || '').trim();
     const iframeUrl = (createForm.iframeUrl || '').trim();
     if (!titre) return setError('Le titre est obligatoire.');
+    // Validate iframe url whitelist
+    const isAllowedIframe = (raw) => {
+      if (!raw) return true;
+      try {
+        const u = new URL(raw);
+        if (!['http:', 'https:'].includes(u.protocol)) return false;
+        if (u.hostname === 'localhost' && ['3000', '8000'].includes(u.port)) return true;
+        return false;
+      } catch {
+        return false;
+      }
+    };
     if (!iframeUrl && !createImageFile) return setError('Il faut une iframe URL ou une image.');
+    if (iframeUrl && !isAllowedIframe(iframeUrl)) return setError('Iframe URL non autorisée (localhost:3000 ou localhost:8000 uniquement).');
     try {
       let created = await createCarte(createForm);
       if (createImageFile) {

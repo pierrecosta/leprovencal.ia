@@ -393,7 +393,18 @@ export async function login({ username, password }) {
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
   });
 
-  if (data?.access_token) setToken(data.access_token);
+  // Two possible server behaviors:
+  // - Return { access_token } (Bearer token) -> frontend stores it via setToken
+  // - Or set a HttpOnly cookie and return a simple success payload -> emit login event
+  if (data?.access_token) {
+    setToken(data.access_token);
+  } else {
+    try {
+      window.dispatchEvent(new Event('auth:login'));
+    } catch {
+      // ignore
+    }
+  }
   return data;
 }
 
@@ -418,7 +429,16 @@ export async function getMe() {
 
 // (Optionnel) helper logout
 export function logout() {
-  dispatchLogout('manual');
+  // Try to notify server (if an endpoint exists) to clear HttpOnly cookie, then dispatch logout locally.
+  (async () => {
+    try {
+      await http.post('/auth/logout');
+    } catch {
+      // ignore errors (endpoint may not exist)
+    } finally {
+      dispatchLogout('manual');
+    }
+  })();
 }
 
 // ==========================

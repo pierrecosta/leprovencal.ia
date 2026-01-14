@@ -48,6 +48,22 @@ npm start
 - Backend: http://localhost:8000
 - Healthcheck API: http://localhost:8000/health (inclut `db`, `uptime_seconds`, `version`)
 
+## Auth (cookie HttpOnly) — notes importantes
+
+- Le backend peut désormais émettre un cookie HttpOnly `access_token` lors de `/auth/login`.
+- En développement, le cookie est posé pour l'origine backend (http://localhost:8000). Le frontend doit
+  effectuer ses requêtes en incluant les credentials (cookies). Exemple Axios frontend :
+
+```js
+// axios instance
+const api = axios.create({ baseURL: process.env.REACT_APP_API_URL || 'http://localhost:8000', withCredentials: true });
+```
+
+- CORS: `ALLOWED_ORIGINS` doit inclure explicitement `http://localhost:3000` (front) en dev. `allow_credentials` est activé côté backend.
+- Le frontend `login` POST renvoie toujours la payload JSON existante et, en plus, le cookie est posé. Le frontend doit compter sur la présence du cookie (HttpOnly) pour les requêtes authentifiées. Un endpoint `/auth/logout` est exposé pour effacer le cookie.
+
+Dev ports whitelist: dans ce dépôt, les ports de développement autorisés sont `localhost:3000` (frontend) et `localhost:8000` (backend).
+
 ## ToDo for PROD
 
 ### Topic A — Secrets & configuration

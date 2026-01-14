@@ -4,7 +4,7 @@ Description: Routes d'authentification (login, register) avec JWT et bcrypt.
 Stack: FastAPI + SQLAlchemy + Passlib + PyJWT
 """
 
-from fastapi import APIRouter, Depends, status, Request
+from fastapi import APIRouter, Depends, status, Request, Response
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 import os
@@ -137,6 +137,7 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
 @router.post("/login")
 def login(
     request: Request,
+    response: Response,
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db),
 ):
@@ -152,6 +153,23 @@ def login(
     try:
         result = auth_service.login_service(db, username=username, password=form_data.password)
         _clear_login_state(ip=ip, username=username)
+
+        # If the service returned an access_token, set it as a HttpOnly cookie
+        token = result.get("access_token") if isinstance(result, dict) else None
+        if token:
+            # cookie attributes: HttpOnly, SameSite=Lax, path=/; secure in production
+            secure = os.getenv("ENV", "development").lower() not in ("development", "dev", "local")
+            response.set_cookie(
+                key="access_token",
+                value=token,
+                httponly=True,
+                secure=secure,
+                samesite="lax",
+                path="/",
+            )
+            # Also return JSON payload (keep existing behavior)
+            return {**result}
+
         return result
     except UnauthorizedError as e:
         _register_login_failure(ip=ip, username=username)
@@ -172,3 +190,11 @@ def get_me(current_user: str = Depends(require_authenticated)):
     Retourne l'utilisateur courant (extrait du token).
     """
     return {"username": current_user}
+
+
+# Optional logout endpoint to clear cookie-based auth
+@router.post("/logout")
+def logout(response: Response):
+    """Efface le cookie `access_token` si présent."""
+    response.delete_cookie("access_token", path="/")
+    return {"status": "ok"}

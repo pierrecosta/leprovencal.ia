@@ -11,7 +11,7 @@ import os
 from jose import JWTError, jwt
 from jose.exceptions import ExpiredSignatureError
 from passlib.context import CryptContext
-from fastapi import Depends, status
+from fastapi import Depends, status, Request
 from fastapi.security import OAuth2PasswordBearer
 from app.utils.http_errors import http_error
 
@@ -89,12 +89,16 @@ def decode_access_token(token: str) -> Optional[Dict[str, str]]:
 # ==========================
 # Dépendance FastAPI
 # ==========================
-def require_authenticated(token: Optional[str] = Depends(oauth2_scheme)) -> str:
+def require_authenticated(request: Request, token: Optional[str] = Depends(oauth2_scheme)) -> str:
     """
     Dépendance à utiliser sur les routes PRIVÉES.
     Exige un token valide, sinon lève 401.
     Retourne le username (sub).
     """
+    # If no Authorization header token, allow token supplied via HttpOnly cookie `access_token`.
+    if not token:
+        cookie_token = request.cookies.get('access_token')
+        token = cookie_token or None
     if not token:
         raise http_error(
             status.HTTP_401_UNAUTHORIZED,
@@ -114,11 +118,14 @@ def require_authenticated(token: Optional[str] = Depends(oauth2_scheme)) -> str:
     return payload["sub"]
 
 
-def get_current_user_optional(token: Optional[str] = Depends(oauth2_scheme)) -> Optional[str]:
+def get_current_user_optional(request: Request, token: Optional[str] = Depends(oauth2_scheme)) -> Optional[str]:
     """
     Dépendance optionnelle pour les routes PUBLIQUES.
     N'exige pas le token : retourne None si absent/invalide.
     """
+    if not token:
+        cookie_token = request.cookies.get('access_token')
+        token = cookie_token or None
     if not token:
         return None
     payload = decode_access_token(token)

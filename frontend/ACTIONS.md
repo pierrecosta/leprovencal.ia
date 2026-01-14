@@ -1,84 +1,108 @@
-# Frontend Actions
+# ACTIONS — Priorités et découpage optimisé (Frontend)
 
-## CSS System (Next)
-- [x] Make `theme.css` the only source for palette/typography/shadows — UPDATED: moved App.css drop-shadow values into `theme.css` variables; converted `olive.svg`, `lavender.svg`, and `logo.svg` to `currentColor`; added small SVG utility classes in `theme.css`.
-- [x] Remove remaining duplicated styles between App/theme/Tailwind — UPDATED: moved `.btn` margin into `theme.css` and removed duplicated `.container`/`.section`/`.card`/`.btn` rules from `App.css`.
+Ce fichier regroupe les actions prioritaires pour améliorer, rationaliser, nettoyer et rendre cohérent le code frontend.
 
-## Améliorations Visuelles & UX (Janvier 2026) ✨
-- [x] **Glassmorphism** — Sections, cartes et tables utilisent maintenant des effets de verre avec backdrop-filter pour un rendu moderne et élégant.
-- [x] **Gradients Provence** — Ajout de gradients harmonieux sur les boutons, navbar et badges (lavande → prune, sable → terra, olive → sauge).
-- [x] **Animations fluides** — Toutes les transitions utilisent des cubic-bezier pour des mouvements naturels (0.4s pour les éléments principaux).
-- [x] **Micro-interactions** :
-  - Cartes : effet de lift (translateY -6px) + scale + shimmer au survol
-  - Boutons : effet de brillance animée qui traverse au survol
-  - Navigation : soulignement progressif des liens + élévation
-  - Inputs : lift au focus + bordure animée
-  - Tables : zoom léger des lignes au survol
-- [x] **Ombres améliorées** — Système d'ombres à 4 niveaux (sm/md/lg/xl) avec doubles couches pour plus de profondeur.
-- [x] **Logo animé** — Float doux au lieu de rotation rapide, avec hover plus marqué (scale + rotate + brightness).
-- [x] **Fond subtil** — Effet de particules/gradients radiaux animés en arrière-plan (opacity 3%) pour ajouter de la profondeur.
-- [x] **Footer élégant** — Bordure dégradée animée avec effet shimmer.
-- [x] **Animations d'entrée** — fadeInUp en cascade pour tous les enfants de .App avec délais progressifs.
-- [x] **Classes utilitaires** — animate-pulse, animate-bounce, animate-fade-in, animate-glow, hover-lift, hover-grow, hover-glow.
+## Objectifs
+- Respecter les bonnes pratiques (sécurité, tests, accessibilité).
+- Rationaliser la base de code pour faciliter la maintenance.
+- Nettoyer le code inutilisé ou redondant.
+- Standardiser conventions et architecture.
+- Fournir un découpage d'implémentation par étapes prioritaires.
 
-### Détails techniques
-- **Variables ajoutées** :
-  - `--gradient-provence`, `--gradient-sunset`, `--gradient-olive`, `--gradient-soft`
-  - `--glass-bg`, `--glass-border`, `--glass-blur`
-  - `--shadow-xl`, `--shadow-inset`
-  - `--radius-sm`, `--radius-lg`
-  
-- **Fichiers modifiés** :
-  - `frontend/src/theme.css` — ajout de 8+ animations keyframes, amélioration des composants (cards, buttons, inputs, tables, navbar)
-  - `frontend/src/App.css` — fond animé, logo float, animations d'entrée, footer shimmer
+---
 
-- **Performance** :
-  - Utilisation de `will-change` implicite via transform/opacity
-  - Animations GPU-accelerated (transform, opacity, filter)
-  - Respect de prefers-reduced-motion pour l'accessibilité
+## Priorités (Haute / Moyenne / Basse)
 
-## Images & Authenticated Cards (CRUD)
-- Goals:
-  - Cache images efficiently for site visitors to improve performance and reduce bandwidth.
-  - Provide create / edit / delete UI for "cards" (same pattern as articles) available only to authenticated users.
-  - Keep read-only browsing available to anonymous users; require server-side auth/permissions for mutations.
+### Priorité Haute
+- 1. Stratégie d'authentification claire (token vs cookie HttpOnly) — confirmer et implémenter. (Fichiers: `src/services/api.js`, `src/hooks/useAuth.js`) — Effort: moyen.
+- 2. Corriger persistence / re-hydratation de l'utilisateur (si token côté client requis) ou documenter explicitement l'usage de cookies. (Effort: moyen)
+- 3. Implémenter validation & filtrage des URLs d'iframe (sécurité) dans `GeographyPage`. (Fichiers: `src/pages/GeographyPage.jsx`, `src/services/api.js`) — Effort: petit.
+- 4. Ajouter tests unitaires pour `services/api.js` et `useDictionary`. (Effort: moyen)
 
-- Implementation checklist:
-  - Image caching & delivery:
-    - [ ] Backend: serve images with appropriate `Cache-Control`, `ETag` and support resized/thumbnail endpoints (e.g. `/images/:id?w=400`).
-    - [ ] Frontend: use `loading="lazy"` on images and display a lightweight placeholder while loading.
-    - [ ] Add a Service Worker (Workbox) to cache images using a `stale-while-revalidate` strategy (cache name `images-v1`) and limit size/age.
-    - [ ] Provide a fallback placeholder image when remote image fails to load.
-    - [ ] Optionally: use a CDN for image hosting and long-lived cache headers.
+### Priorité Moyenne
+- 5. Supprimer ou implémenter `src/hooks/usePagination.js` (actuellement vide). (Effort: petit)
+- 6. Extraire et regrouper les normalizers de `src/services/api.js` dans `src/services/normalizers.js` pour lisibilité et testabilité. (Effort: moyen)
+- 7. Centraliser la gestion des erreurs / notifications (composant `Toast` ou `ErrorBoundary`). (Effort: moyen)
 
-  - Cards CRUD (UI + API wiring):
-    - [ ] Reuse `ArticleCard` pattern: add `createCard`, `updateCard`, `deleteCard` endpoints in `frontend/src/services/api.js` (similar to `createArticle`/`deleteArticle`).
-    - [ ] Add a `Card` component (or reuse `ArticleCard`) that shows Edit + Delete buttons only when `useAuth().user` is present and `ready`.
-    - [ ] Add a creation form (link → fetch metadata or title) on the listing page (e.g. `HomePage.jsx`) visible only to logged-in users.
-    - [ ] For link-based card creation: add a backend endpoint to fetch page metadata (title/description/image) server-side, then POST sanitized data to `POST /cards`.
-    - [ ] Implement optimistic UI updates (add/remove/update) with rollback on error; show success/error feedback (toasts or `ApiAlert`).
+### Priorité Basse
+- 8. Standardiser l'utilisation Tailwind vs classes CSS custom (préférer utilitaires Tailwind pour nouveaux composants). (Effort: moyen)
+- 9. Ajouter CI: lint, format, tests (GitHub Actions). (Effort: moyen)
+- 10. Auditer et réduire les CSS redondants dans `theme.css` (tokenisation déjà bonne). (Effort: petit/moyen)
 
-  - Auth & permissions:
-    - [ ] Ensure server-side permission checks for `POST/PUT/DELETE /cards` (only allow authenticated editors).
-    - [ ] Frontend: hide edit/delete/create controls for anonymous users; handle `401` responses gracefully (show login prompt or toast, do not force redirect).
-    - [ ] Keep `AuthProvider` in `frontend/src/hooks/useAuth.js` to update UI immediately on login/logout.
+---
 
-  - Tests & QA:
-    - [ ] Add E2E tests (Cypress/Playwright) covering create/edit/delete flows with authenticated user.
-    - [ ] Add unit tests for `Card`/`ArticleCard` logic (edit form validation, optimistic updates).
-    - [ ] Verify caching behavior (simulate cold/warm cache) and measure load improvements.
+## Découpage par thématique (actions détaillées)
 
-- Files to modify (suggested):
-  - `frontend/src/services/api.js` — add `createCard`, `updateCard`, `deleteCard`, and image-upload/metadata helpers.
-  - `frontend/src/components/ArticleCard.jsx` (or `Card.jsx`) — add delete/edit buttons and handle optimistic updates + `onDeleted` callback.
-  - `frontend/src/pages/HomePage.jsx` (or the listing page) — add create-card form and wire callbacks to update list state.
-  - `frontend/src/hooks/useAuth.js` — ensure auth state is reactive (already migrated to `AuthProvider`).
-  - `frontend/src/index.js` — register the Service Worker (e.g. Workbox) and enable only for production builds.
-  - `backend` routes — add `POST/PUT/DELETE /cards` and an endpoint to fetch metadata for a link.
+1) Bonnes pratiques de développement
+- A. Auth: décider stockage du token
+  - Option A: cookie HttpOnly (recommandé) — modifier backend si nécessaire; retirer stockage in-memory pour persistance. Fichiers impactés: `src/services/api.js`, `src/hooks/useAuth.js`.
+  - Option B: access token persistant (localStorage/sessionStorage) — ajouter chiffrement façon sécurisée et revalidation (refresh token). Documenter risques XSS.
+- B. Tests: ajouter suites Jest/React Testing Library pour
+  - `src/services/api.js` (mock axios)
+  - `src/hooks/useDictionary.js`
+  - Composants critiques: `ArticleCard.jsx`, `GeographyPage.jsx`, `HistoryPage.jsx`.
+- C. Linting & formatting: ajouter ESLint + Prettier config et hook pre-commit (`husky`, `lint-staged`).
 
-- Notes / constraints:
-  - Always enforce server-side authorization; frontend-only checks are not secure.
-  - For image caching, prefer server/HTTP headers + CDN; Service Worker adds offline/resilience benefits but increases complexity.
-  - For link metadata scraping, do it server-side to avoid CORS and to sanitize content.
+2) Rationalisation du code existant
+- A. Refactor `services/api.js`:
+  - Extraire normalizers (articles, dictionnaire, histoires, cartes) dans `src/services/normalizers.js`.
+  - Extraire gestion token / auth helpers dans `src/services/auth.js` si nécessaire.
+- B. Factoriser constantes communes (ex: `MAX_IMAGE_BYTES`) dans `src/config/constants.js`.
+- C. Centraliser les messages d'erreur et mapping de champs (facilite i18n ultérieur).
 
-Add these items to the actionable backlog and tell me which ones you want implemented next (I can scaffold API clients, SW registration, or UI forms).
+3) Nettoyage (code non utilisé / redondant)
+- A. Supprimer `src/hooks/usePagination.js` s'il n'est pas utilisé.
+- B. Rechercher et supprimer imports inutilisés (logo.svg, fichiers orphelins).
+- C. Supprimer commentaires morts et code commenté inutile.
+
+4) Cohérence globale
+- A. Conventions de nommage: garder camelCase côté frontend; garder normalizers pour back-compat snake_case.
+- B. Classes CSS vs Tailwind: recommander guide style (ex: components stylés via Tailwind, variables dans `theme.css` pour tokens uniquement).
+- C. Accessibilité: vérifier `aria-*`, focus-visible, keyboard handlers existants (déjà présent); compléter où manquant.
+
+5) Implémentation — Plan pas-à-pas recommandé
+- Sprint 1 (1–3 jours):
+  1. Mettre à jour `ACTIONS.md` (ce fichier).
+  2. Décider stratégie d'auth (réunion rapide, choix cookie HttpOnly idéal).
+  3. Implémenter ou documenter persistance token; adapter `src/services/api.js` (setToken) et `useAuth` re-hydratation.
+
+- Sprint 2 (2–4 jours):
+  1. Extraire `normalizers.js` et refactor `services/api.js` pour l'utiliser.
+  2. Implémenter validations iframe et URL sur `GeographyPage` et `ArticleCard`.
+  3. Supprimer/implémenter `usePagination.js`.
+
+- Sprint 3 (2–3 jours):
+  1. Écrire tests unitaires pour `services/api.js` et `useDictionary`.
+  2. Ajouter linter/formatter et CI (lint + test). Commit hooks `lint-staged`.
+  3. Centraliser error/toast component et remplacer messages inline.
+
+- Sprint 4 (améliorations continues):
+  1. Auditer et nettoyer `theme.css` (supprimer règles inutilisées).
+  2. Ajouter tests E2E si nécessaire.
+
+---
+
+## Estimations rapides & effort
+- Petits changements: validation iframe, suppression `usePagination.js`, constantes partagées — 0.5–1 jour.
+- Moyens: refactor `services/api.js`, extraire normalizers, ajouter tests unitaires — 2–4 jours.
+- Lourds: changement profond de la stratégie d'auth (ajout refresh tokens/cookies côté backend), CI complète, E2E — 3–7 jours selon backend.
+
+---
+
+## Liens utiles (fichiers à consulter)
+- Routage: `src/App.jsx`
+- Auth: `src/hooks/useAuth.js` ; `src/services/api.js`
+- Services/API: `src/services/api.js`
+- Pages principales: `src/pages/*` (`GeographyPage.jsx`, `HistoryPage.jsx`, `DictionaryPage.jsx`)
+- Composants critiques: `src/components/ArticleCard.jsx`, `DictionaryTable.jsx`
+- Styles / tokens: `src/theme.css`
+
+---
+
+## Prochaine étape proposée
+Si tu veux, je peux commencer par implémenter l'une des actions prioritaires :
+- proposer un patch pour persistance d'auth (option choisie), ou
+- implémenter `usePagination.js`, ou
+- extraire `normalizers.js` et refactoriser `services/api.js`.
+
+Indique la tâche à lancer en premier.
