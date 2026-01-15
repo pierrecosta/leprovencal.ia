@@ -11,7 +11,14 @@ __pycache__/
 *.log
 
 # ---- Frontend Node ----
+# Frontend principal (Vite + TypeScript)
 frontend/node_modules/
+frontend/dist/
+frontend/build/
+
+# Frontend legacy (deprecated)
+frontend-old/node_modules/
+frontend-old/build/
 
 # ---- IDE / OS ----
 .vscode/
