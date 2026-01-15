@@ -36,7 +36,7 @@ export function GeographyPage() {
           <p className="text-muted">Aucune carte disponible pour le moment.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+        <div className="geo-grid">
           {cartes.map((carte) => (
             <div key={carte.id} className="card h-full">
               <h3 className="text-2xl font-bold text-heading mb-4">{carte.titre}</h3>

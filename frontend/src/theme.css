@@ -223,7 +223,7 @@ p, li {
 .footer {
   background: var(--primary);
   color: var(--primary-contrast);
-  padding: 1.5rem 1rem;
+  padding: 0.9rem 1rem;
   text-align: center;
   margin-top: 4rem;
   box-shadow: var(--shadow-md);
@@ -232,18 +232,24 @@ p, li {
 .footer-inner {
   max-width: calc(var(--container-max) + 2 * var(--container-padding));
   margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
 }
 
 .footer-text {
-  margin: 0 0 0.5rem 0;
-  font-size: 0.95rem;
+  margin: 0;
+  font-weight: 800;
+  color: var(--primary-contrast);
+  font-size: 1.05rem;
 }
 
 .footer-tagline {
   margin: 0;
   font-style: italic;
   opacity: 0.9;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
 }
 
 /* =====================================================================
@@ -306,19 +312,70 @@ p, li {
 
 .article-row {
   display: flex;
-  flex-direction: row;
-  align-items: center;
+  flex-direction: column;
+  align-items: stretch;
   gap: 1.25rem;
+}
+
+@media (min-width: 640px) {
+  .article-row {
+    flex-direction: row;
+    align-items: flex-start;
+  }
 }
 
 .article-side {
   flex-shrink: 0;
 }
 
+@media (max-width: 639px) {
+  .article-side {
+    align-self: center;
+  }
+}
+
 .article-body {
   flex: 1 1 0%;
   min-width: 0;
   padding-top: 0.15rem;
+}
+
+.article-media-lg {
+  width: 240px;
+  height: 150px;
+  border-radius: 14px;
+  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+@media (max-width: 639px) {
+  .article-media-lg {
+    width: min(520px, 100%);
+    height: 180px;
+  }
+}
+
+.article-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  padding-top: 0.25rem;
+  border-top: 1px solid rgba(203, 213, 225, 0.6);
+}
+
+.article-actions-left,
+.article-actions-right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
 }
 
 .card:hover {
@@ -335,6 +392,31 @@ button, .btn {
   transition: all 0.15s ease;
   cursor: pointer;
   font-weight: 600;
+}
+
+.btn-sm {
+  font-size: 13px;
+  padding: 6px 10px;
+  border-radius: 10px;
+}
+
+.btn-quiet {
+  background: rgba(255, 255, 255, 0.85);
+  color: var(--text-muted);
+  border-color: var(--border);
+  box-shadow: none;
+}
+
+.btn-quiet:hover {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(113, 128, 90, 0.45);
+  color: var(--text);
+}
+
+.btn-quiet-active {
+  background: rgba(113, 128, 90, 0.12);
+  border-color: rgba(92, 107, 69, 0.55);
+  color: var(--heading);
 }
 
 .btn-primary {
@@ -527,6 +609,27 @@ input[type="url"], input[type="file"], textarea, select {
   color: var(--text-muted);
   font-size: 0.95rem;
   line-height: 1.5;
+}
+
+/* =====================================================================
+   Géographie (cartes)
+   ===================================================================== */
+.geo-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .geo-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .geo-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 
 /* =====================================================================

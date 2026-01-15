@@ -33,50 +33,58 @@ export function Pagination({
   };
 
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mt-6">
-      {showLimit ? (
+    <div className="flex flex-wrap items-center justify-center gap-3 mt-6">
+      {showLimit && (
         <div className="flex items-center gap-2">
-          <span className="text-sm text-muted">Éléments/page</span>
-          <select
-            className="input !w-auto !py-2 !px-3"
-            value={limit}
-            onChange={(e) => handleLimitChange(e.target.value)}
-            aria-label="Éléments par page"
-          >
+          <div className="flex items-center gap-2">
             {limitOptions.map((opt) => (
-              <option key={opt} value={opt}>
+              <button
+                key={opt}
+                type="button"
+                onClick={() => onLimitChange?.(opt)}
+                disabled={opt === limit}
+                className={
+                  (
+                    opt === limit
+                      ? 'btn btn-quiet btn-quiet-active btn-sm'
+                      : 'btn btn-quiet btn-sm'
+                  ) +
+                  ' disabled:opacity-70 disabled:cursor-not-allowed'
+                }
+                aria-label={`Afficher ${opt} éléments par page`}
+              >
                 {opt}
-              </option>
+              </button>
             ))}
-          </select>
+          </div>
         </div>
-      ) : (
-        <div />
       )}
 
-      <div className="flex items-center justify-center gap-4">
-      <button
-        onClick={handlePrev}
-        disabled={page === 1}
-        className="btn btn-secondary disabled:opacity-50 disabled:cursor-not-allowed"
-        aria-label="Page précédente"
-      >
-        ← Précédent
-      </button>
-      
-      <span className="text-text">
-        Page <strong>{page}</strong> sur <strong>{pages}</strong>
-      </span>
-      
-      <button
-        onClick={handleNext}
-        disabled={page === pages}
-        className="btn btn-secondary disabled:opacity-50 disabled:cursor-not-allowed"
-        aria-label="Page suivante"
-      >
-        Suivant →
-      </button>
-      </div>
+      {pages > 1 && (
+        <>
+          <button
+            onClick={handlePrev}
+            disabled={page === 1}
+            className="btn btn-secondary disabled:opacity-50 disabled:cursor-not-allowed"
+            aria-label="Page précédente"
+          >
+            ← Précédent
+          </button>
+
+          <span className="text-text">
+            Page <strong>{page}</strong> sur <strong>{pages}</strong>
+          </span>
+
+          <button
+            onClick={handleNext}
+            disabled={page === pages}
+            className="btn btn-secondary disabled:opacity-50 disabled:cursor-not-allowed"
+            aria-label="Page suivante"
+          >
+            Suivant →
+          </button>
+        </>
+      )}
     </div>
   );
 }

@@ -219,63 +219,28 @@ export function ArticleCard({ article, onUpdated, onDeleted }: ArticleCardProps)
 
   return (
     <div className="card article-card flex flex-col gap-4">
-      {/* Action bar (top) */}
-      {canEdit && (
-        <div className="flex items-center justify-end gap-2">
-          {!isEditing ? (
-            <button type="button" onClick={startEdit} className="btn btn-primary">
-              Éditer
-            </button>
-          ) : (
-            <>
-              <button type="button" onClick={cancelEdit} className="btn btn-secondary">
-                Annuler
-              </button>
-              <button
-                type="button"
-                onClick={handleSave}
-                disabled={loading || !hasChanges}
-                className="btn btn-primary disabled:opacity-50"
-              >
-                {loading ? 'Sauvegarde...' : 'Sauvegarder'}
-              </button>
-            </>
-          )}
-        </div>
-      )}
-
       {errorMsg && <ApiAlert message={errorMsg} type="error" onDismiss={() => setErrorMsg(null)} />}
 
       {/* Content */}
-      <div className="article-row flex flex-row items-center gap-4">
+      <div className="article-row">
         {/* Image (toujours à gauche) */}
-        <div className="article-side flex-shrink-0">
+        <div className="article-side">
           {!displayImageUrl || imageError ? (
             <div
-              className="article-media"
+              className="article-media-lg"
               style={{ backgroundColor: 'var(--color-lavender)' }}
               aria-label="Image indisponible"
               role="img"
             >
-              <span className="text-xs text-white font-semibold tracking-wide">Image</span>
+              <span className="text-sm text-white font-semibold tracking-wide">Image</span>
             </div>
           ) : (
             <img
               src={displayImageUrl}
               alt={view.titre}
-              className="article-media object-contain"
+              className="article-media-lg object-contain"
               onError={() => setImageError(true)}
             />
-          )}
-
-          {canEdit && view.imageStored && !isEditing && (
-            <button
-              onClick={handleDeleteImage}
-              className="mt-2 text-sm text-red-600 hover:underline"
-              disabled={loading}
-            >
-              Supprimer l'image
-            </button>
           )}
         </div>
 
@@ -366,16 +331,54 @@ export function ArticleCard({ article, onUpdated, onDeleted }: ArticleCardProps)
         </div>
       </div>
 
-      {/* Delete button */}
-      {canEdit && !isEditing && (
-        <div className="flex justify-end">
-          <button
-            onClick={handleDelete}
-            disabled={deleting}
-            className="text-sm text-red-600 hover:underline disabled:opacity-50"
-          >
-            {deleting ? 'Suppression...' : 'Supprimer l\'article'}
-          </button>
+      {/* Actions (bottom) */}
+      {canEdit && (
+        <div className="article-actions">
+          <div className="article-actions-left">
+            {!isEditing ? (
+              <button type="button" onClick={startEdit} className="btn btn-primary">
+                Éditer
+              </button>
+            ) : (
+              <>
+                <button type="button" onClick={cancelEdit} className="btn btn-secondary">
+                  Annuler
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSave}
+                  disabled={loading || !hasChanges}
+                  className="btn btn-primary disabled:opacity-50"
+                >
+                  {loading ? 'Sauvegarde...' : 'Sauvegarder'}
+                </button>
+              </>
+            )}
+
+            {!isEditing && view.imageStored && (
+              <button
+                type="button"
+                onClick={handleDeleteImage}
+                className="btn btn-secondary btn-sm disabled:opacity-50"
+                disabled={loading}
+              >
+                Supprimer l'image
+              </button>
+            )}
+          </div>
+
+          {!isEditing && (
+            <div className="article-actions-right">
+              <button
+                type="button"
+                onClick={handleDelete}
+                disabled={deleting}
+                className="text-sm text-red-600 hover:underline disabled:opacity-50"
+              >
+                {deleting ? 'Suppression...' : 'Supprimer l\'article'}
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>
