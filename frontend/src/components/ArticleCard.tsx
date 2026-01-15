@@ -233,11 +233,11 @@ export function ArticleCard({ article, onUpdated, onDeleted }: ArticleCardProps)
       <div className="flex flex-col md:flex-row gap-4">
         {/* Image */}
         {displayImageUrl && (
-          <div className="md:w-1/3">
+          <div className="md:w-1/3 flex-shrink-0">
             <img
               src={displayImageUrl}
               alt={view.titre}
-              className="w-full h-auto rounded shadow-sm object-cover"
+              className="w-full h-full rounded shadow-sm object-contain max-h-96"
             />
             {canEdit && view.imageStored && !isEditing && (
               <button
