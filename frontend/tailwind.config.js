@@ -1,13 +1,12 @@
 /** @type {import('tailwindcss').Config} */
-module.exports = {
+export default {
   content: [
-    "./public/index.html",
-    "./src/**/*.{js,jsx,ts,tsx}"
+    "./index.html",
+    "./src/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
     extend: {
       colors: {
-        // Source de vérité: frontend/src/theme.css (variables CSS)
         provencesage: "var(--provence-sage)",
         provenceolive: "var(--provence-olive)",
         provencesand: "var(--provence-sand)",
@@ -42,18 +41,12 @@ module.exports = {
         padding: "1rem",
       },
       fontFamily: {
-        // Sans par défaut ; ajoute une serif si nécessaire dans le projet
         sans: [
-          "-apple-system","BlinkMacSystemFont","Segoe UI","Inter","Roboto",
-          "Oxygen","Ubuntu","Cantarell","Fira Sans","Droid Sans","Helvetica Neue","sans-serif"
-        ],
-        mono: [
-          "ui-monospace","SFMono-Regular","Menlo","Monaco","Consolas","Liberation Mono","Courier New","monospace"
+          "-apple-system", "BlinkMacSystemFont", "Segoe UI", "Inter", "Roboto",
+          "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", "sans-serif"
         ],
       },
     },
   },
-  plugins: [
-    // Activer si installé : require('@tailwindcss/typography'), require('@tailwindcss/forms')
-  ],
+  plugins: [],
 };

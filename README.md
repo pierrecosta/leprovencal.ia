@@ -1,23 +1,61 @@
 # leprovencal.ia
-Site internet à propos de la Provence
 
-## Organisation
+Site internet à propos de la Provence - Architecture moderne avec TypeScript
+
+## ⚠️ Important - Frontend Modernisé
+
+**Le frontend principal est maintenant `frontend/` (TypeScript + Vite).**
+
+L'ancien frontend CRA (`frontend-old/`) est **déprécié** depuis janvier 2026.
+
+### 🆕 Nouvelles fonctionnalités (v2.0)
+- ✅ **TypeScript** strict mode pour type safety
+- ✅ **Vite** pour build ultra-rapide (vs Webpack)
+- ✅ **Hook useEditInPlace** réutilisable
+- ✅ **Validation helpers** centralisés
+- ✅ **Error Boundary** pour gestion erreurs React
+- ✅ Documentation exhaustive
+
+📚 Voir [`IMPLEMENTATION_SUMMARY.md`](IMPLEMENTATION_SUMMARY.md) pour détails complets.
+
+---
+
+## 📋 Organisation
+
 ### Backend
-- Gère la donnée (API FastAPI).
-- Initialisation grâce à un CSV (seeds).
-- Création/migrations de la base de données (PostgreSQL).
+- Gère la donnée (API FastAPI)
+- Initialisation grâce à un CSV (seeds)
+- Création/migrations de la base de données (PostgreSQL)
 
-### Frontend
-- Accueil : articles
-- Langue & Dictionnaire : table de traduction
-- Géographie : cartes
-- Histoire : histoires et légendes
+### Frontend (frontend) ⭐ RECOMMANDÉ
+- **Stack** : React 18 + TypeScript + Vite + Tailwind CSS
+- **Pages** :
+  - Accueil : articles avec CRUD
+  - Langue & Dictionnaire : table de traduction
+  - Géographie : cartes interactives
+  - Histoire : histoires et légendes
 
-## Technologie
-PostgreSQL + React
+### Frontend (frontend-old) ⚠️ DÉPRÉCIÉ
+- Ancien frontend Create React App (JavaScript)
+- **Ne plus utiliser pour nouveau développement**
+- Voir [`frontend-old/DEPRECATED.md`](frontend-old/DEPRECATED.md)
 
-## Quickstart (dev)
-### Backend
+---
+
+## 🚀 Quickstart (dev)
+
+### Option 1 : Tout démarrer (recommandé)
+```bash
+# Installation concurrently (une seule fois)
+npm install
+
+# Démarrer backend + frontend-vite en parallèle
+npm run dev
+```
+
+### Option 2 : Démarrage séparé
+
+#### Backend
 ```bash
 cd backend
 source venv/bin/activate
@@ -25,28 +63,52 @@ python init_app.py
 uvicorn app.main:app --reload
 ```
 
-### Frontend
+#### Frontend (Vite - recommandé)
 ```bash
 cd frontend
 npm install
-npm start
+npm run dev
 ```
 
-## Configuration (.env)
+#### Frontend (CRA - déprécié)
+```bash
+cd frontend-old
+npm install
+npm start  # ⚠️ NE PLUS UTILISER
+```
+
+---
+
+## ⚙️ Configuration (.env)
+
 ### Backend (`backend/.env`)
-- `ENV=development|production` (recommandé ; en `production`, durcissements activés)
-- `DATABASE_URL=postgresql+psycopg2://myuser:mypassword@localhost:5432/provencal_db`
-- `SECRET_KEY=...` (**obligatoire en prod** ; valeur `change-me` interdite, l'app fail-fast au démarrage)
-- `ALLOWED_ORIGINS=https://votre-domaine-frontend.tld` (en prod : pas de `*`, pas de `localhost`)
-- `LOG_LEVEL=INFO` (en prod : `DEBUG` est neutralisé)
+```env
+ENV=development|production
+DATABASE_URL=postgresql+psycopg2://myuser:mypassword@localhost:5432/provencal_db
+SECRET_KEY=...  # Obligatoire en prod (pas 'change-me')
+ALLOWED_ORIGINS=https://votre-domaine.tld  # Pas de '*' en prod
+LOG_LEVEL=INFO  # DEBUG neutralisé en prod
+```
 
-### Frontend (`frontend/.env`)
-- `REACT_APP_API_URL=http://localhost:8000` (optionnel, défaut: `http://localhost:8000`)
+### Frontend Vite (`frontend/.env.local`)
+```env
+VITE_API_URL=http://localhost:8000
+```
 
-## URLs (dev)
-- Frontend: http://localhost:3000
-- Backend: http://localhost:8000
-- Healthcheck API: http://localhost:8000/health (inclut `db`, `uptime_seconds`, `version`)
+### Frontend CRA (`frontend-old/.env`) ⚠️ Déprécié
+```env
+REACT_APP_API_URL=http://localhost:8000
+```
+
+---
+
+## 🌐 URLs (dev)
+
+- **Frontend (Vite)**: http://localhost:5173 (dev) ou http://localhost:4173 (preview)
+- Frontend (CRA déprécié): http://localhost:3000
+- **Backend API**: http://localhost:8000
+- **API Healthcheck**: http://localhost:8000/health
+- **API Docs**: http://localhost:8000/docs (Swagger UI)
 
 ## Auth (cookie HttpOnly) — notes importantes
 
@@ -62,7 +124,7 @@ const api = axios.create({ baseURL: process.env.REACT_APP_API_URL || 'http://loc
 - CORS: `ALLOWED_ORIGINS` doit inclure explicitement `http://localhost:3000` (front) en dev. `allow_credentials` est activé côté backend.
 - Le frontend `login` POST renvoie toujours la payload JSON existante et, en plus, le cookie est posé. Le frontend doit compter sur la présence du cookie (HttpOnly) pour les requêtes authentifiées. Un endpoint `/auth/logout` est exposé pour effacer le cookie.
 
-Dev ports whitelist: dans ce dépôt, les ports de développement autorisés sont `localhost:3000` (frontend) et `localhost:8000` (backend).
+Dev ports whitelist: dans ce dépôt, les ports de développement autorisés sont `localhost:5173` (frontend dev), `localhost:4173` (frontend preview), `localhost:3000` (frontend legacy) et `localhost:8000` (backend).
 
 ## ToDo for PROD
 
