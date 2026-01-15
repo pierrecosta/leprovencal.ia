@@ -3,6 +3,7 @@ import type { Article } from '@/types';
 import { createArticle, getArticlesPaged, uploadArticleImage, getApiErrorMessage } from '@/services/api';
 import { ArticleCard } from '@/components/ArticleCard';
 import { Loader } from '@/components/Loader';
+import { Pagination } from '@/components/Pagination';
 import { useAuth } from '@/hooks/useAuth';
 import { usePagination } from '@/hooks/usePagination';
 import { toastError, toastSuccess } from '@/utils/notify';
@@ -19,7 +20,7 @@ export function HomePage() {
   const [adding, setAdding] = useState(false);
   const [creating, setCreating] = useState(false);
 
-  const { page, setPage } = usePagination(1, 1);
+  const { page, pages, setPage, setPages } = usePagination(1, 1);
   const [hasNext, setHasNext] = useState(false);
 
   useEffect(() => {
@@ -31,6 +32,8 @@ export function HomePage() {
         const items = res.data;
         setHasNext(items.length > 5);
         setArticles(items.slice(0, 5));
+        // Update pages: if hasNext, we know there's at least page+1
+        setPages(items.length > 5 ? page + 1 : page);
       } catch (err) {
         setError('Impossible de charger les articles.');
       } finally {
@@ -38,7 +41,7 @@ export function HomePage() {
       }
     }
     fetchArticles();
-  }, [page]);
+  }, [page, setPages]);
 
   const handleCreateArticle = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -146,24 +149,8 @@ export function HomePage() {
         ))}
       </section>
 
-      {/* Simple pagination */}
-      <div className="flex items-center justify-center gap-4 mt-8">
-        <button
-          onClick={() => setPage(Math.max(1, page - 1))}
-          disabled={page === 1}
-          className="btn btn-secondary disabled:opacity-50"
-        >
-          ← Précédent
-        </button>
-        <span className="text-text">Page {page}</span>
-        <button
-          onClick={() => setPage(page + 1)}
-          disabled={!hasNext}
-          className="btn btn-secondary disabled:opacity-50"
-        >
-          Suivant →
-        </button>
-      </div>
+      {/* Pagination */}
+      <Pagination page={page} pages={pages} onPageChange={setPage} />
     </div>
   );
 }

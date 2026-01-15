@@ -8,6 +8,7 @@ import { HomePage } from '@/pages/HomePage';
 import { DictionaryPage } from '@/pages/DictionaryPage';
 import { GeographyPage } from '@/pages/GeographyPage';
 import { HistoryPage } from '@/pages/HistoryPage';
+import { HistoryDetailPage } from '@/pages/HistoryDetailPage';
 import { LoginPage } from '@/pages/LoginPage';
 
 export function App() {
@@ -23,6 +24,7 @@ export function App() {
               <Route path="/langue-dictionnaire" element={<DictionaryPage />} />
               <Route path="/geographie" element={<GeographyPage />} />
               <Route path="/histoire-legendes" element={<HistoryPage />} />
+              <Route path="/histoire-legendes/:id" element={<HistoryDetailPage />} />
               <Route path="/login" element={<LoginPage />} />
             </Routes>
           </main>

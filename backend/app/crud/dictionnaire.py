@@ -20,6 +20,10 @@ def list_mots(
 ) -> dict:
     query = db.query(Dictionnaire)
 
+    # Exclude entries with empty mots_francais
+    query = query.filter(Dictionnaire.mots_francais != "")
+    query = query.filter(Dictionnaire.mots_francais.isnot(None))
+
     if theme and theme.lower() != "tous":
         query = query.filter(Dictionnaire.theme == theme)
     if categorie and categorie.lower() != "toutes":
