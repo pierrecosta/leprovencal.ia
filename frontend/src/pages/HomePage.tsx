@@ -71,8 +71,11 @@ export function HomePage() {
   if (error && articles.length === 0) return <p className="text-red-600 text-center">{error}</p>;
 
   return (
-    <div className="p-6">
-      <h1 className="text-3xl font-bold text-heading mb-6">Culture Provençale</h1>
+    <div className="mx-auto max-w-[1100px] px-4 py-6">
+      <header className="mb-6">
+        <h1 className="text-3xl font-bold text-heading">Culture Provençale</h1>
+        <p className="text-muted mt-1">Articles, découvertes et repères autour de la Provence.</p>
+      </header>
 
       {user && (
         <section className="mb-6 border rounded bg-white shadow-sm">
@@ -134,7 +137,7 @@ export function HomePage() {
         </section>
       )}
 
-      <section className="space-y-6">
+      <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {articles.map((article) => (
           <ArticleCard
             key={article.id}

@@ -50,6 +50,7 @@ export function ArticleCard({ article, onUpdated, onDeleted }: ArticleCardProps)
 
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imageRev, setImageRev] = useState(0);
+  const [imageError, setImageError] = useState(false);
 
   const [deleting, setDeleting] = useState(false);
 
@@ -63,6 +64,7 @@ export function ArticleCard({ article, onUpdated, onDeleted }: ArticleCardProps)
       imageStored: article.imageStored,
     };
     setView(updated);
+    setImageError(false);
     if (!isEditing) {
       setForm(updated);
     }
@@ -216,7 +218,7 @@ export function ArticleCard({ article, onUpdated, onDeleted }: ArticleCardProps)
     : view.imageUrl;
 
   return (
-    <div className="card flex flex-col gap-4">
+    <div className="card article-card flex flex-col gap-4">
       {/* Action bar (top) */}
       {canEdit && (
         <div className="flex items-center justify-end gap-2">
@@ -245,34 +247,45 @@ export function ArticleCard({ article, onUpdated, onDeleted }: ArticleCardProps)
       {errorMsg && <ApiAlert message={errorMsg} type="error" onDismiss={() => setErrorMsg(null)} />}
 
       {/* Content */}
-      <div className="flex flex-col md:flex-row gap-4">
-        {/* Image */}
-        {displayImageUrl && (
-          <div className="md:w-1/3 flex-shrink-0">
+      <div className="article-row flex flex-row items-center gap-4">
+        {/* Image (toujours à gauche) */}
+        <div className="article-side flex-shrink-0">
+          {!displayImageUrl || imageError ? (
+            <div
+              className="article-media"
+              style={{ backgroundColor: 'var(--color-lavender)' }}
+              aria-label="Image indisponible"
+              role="img"
+            >
+              <span className="text-xs text-white font-semibold tracking-wide">Image</span>
+            </div>
+          ) : (
             <img
               src={displayImageUrl}
               alt={view.titre}
-              className="w-full h-full rounded shadow-sm object-contain max-h-96"
+              className="article-media object-contain"
+              onError={() => setImageError(true)}
             />
-            {canEdit && view.imageStored && !isEditing && (
-              <button
-                onClick={handleDeleteImage}
-                className="mt-2 text-sm text-red-600 hover:underline"
-                disabled={loading}
-              >
-                Supprimer l'image
-              </button>
-            )}
-          </div>
-        )}
+          )}
+
+          {canEdit && view.imageStored && !isEditing && (
+            <button
+              onClick={handleDeleteImage}
+              className="mt-2 text-sm text-red-600 hover:underline"
+              disabled={loading}
+            >
+              Supprimer l'image
+            </button>
+          )}
+        </div>
 
         {/* Text */}
-        <div className="flex-1">
+        <div className="article-body flex-1">
           {!isEditing ? (
             <>
-              <h3 className="text-2xl font-bold text-heading mb-2">{view.titre}</h3>
-              <p className="text-text mb-4">{view.description}</p>
-              <div className="flex items-center justify-between gap-4">
+              <h3 className="article-title text-2xl font-bold text-heading mb-2">{view.titre}</h3>
+              <p className="text-text mb-4 leading-relaxed">{view.description}</p>
+              <div className="article-meta">
                 {view.sourceUrl && (
                   <a
                     href={view.sourceUrl}
@@ -284,7 +297,7 @@ export function ArticleCard({ article, onUpdated, onDeleted }: ArticleCardProps)
                   </a>
                 )}
                 {article.dateAjout && (
-                  <span className="text-sm text-muted italic ml-auto">
+                  <span className="text-sm text-muted italic">
                     Ajouté le {new Date(article.dateAjout).toLocaleDateString('fr-FR')}
                   </span>
                 )}

@@ -260,6 +260,65 @@ p, li {
   padding: 1.5rem;
 }
 
+/* =====================================================================
+   Articles (cards)
+   ===================================================================== */
+.article-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.article-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: linear-gradient(180deg, var(--color-terra), var(--color-sage));
+  opacity: 0.95;
+}
+
+.article-media {
+  width: 90px;
+  height: 50px;
+  border-radius: 10px;
+  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.article-title {
+  margin: 0;
+}
+
+.article-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.article-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 1rem;
+}
+
+.article-side {
+  flex-shrink: 0;
+}
+
+.article-body {
+  flex: 1 1 0%;
+  min-width: 0;
+}
+
 .card:hover {
   background: rgba(255, 255, 255, 0.98);
   box-shadow: var(--shadow-lg);
