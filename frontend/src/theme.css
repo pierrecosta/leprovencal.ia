@@ -248,7 +248,7 @@ p, li {
 .footer-tagline {
   margin: 0;
   font-style: italic;
-  opacity: 0.9;
+  color: var(--primary-contrast);
   font-size: 0.95rem;
 }
 

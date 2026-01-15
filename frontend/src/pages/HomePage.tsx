@@ -76,68 +76,7 @@ export function HomePage() {
     <div className="mx-auto max-w-[1100px] px-4 sm:px-6 lg:px-8 py-6 pb-10">
       <header className="mb-6">
         <h1 className="text-3xl font-bold text-heading">Culture Provençale</h1>
-        <p className="text-muted mt-1">Articles, découvertes et repères autour de la Provence.</p>
       </header>
-
-      {user && (
-        <section className="mb-6 border rounded bg-white shadow-sm">
-          <header className="px-4 py-3 border-b bg-surface flex items-center justify-between gap-2">
-            <h3 className="font-bold text-xl text-heading">Gestion (connecté)</h3>
-            <button className="btn btn-primary" onClick={() => setCreating((v) => !v)} type="button">
-              {creating ? 'Fermer' : 'Ajouter un article'}
-            </button>
-          </header>
-
-          {creating && (
-            <form onSubmit={handleCreateArticle} className="p-4">
-              <div className="grid md:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-sm font-semibold mb-1">Titre *</label>
-                  <input
-                    className="input"
-                    placeholder="Titre"
-                    value={newArticle.titre}
-                    onChange={(e) => setNewArticle({ ...newArticle, titre: e.target.value })}
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold mb-1">Image (fichier, optionnel, &lt; 2Mo)</label>
-                  <input
-                    className="input"
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file && file.size > MAX_IMAGE_BYTES) {
-                        toastError('Fichier trop volumineux (max 2 Mo).');
-                        e.target.value = '';
-                        return;
-                      }
-                      setNewImageFile(file || null);
-                    }}
-                  />
-                </div>
-              </div>
-
-              <div className="mt-3">
-                <label className="block text-sm font-semibold mb-1">Description</label>
-                <textarea
-                  className="input"
-                  rows={3}
-                  placeholder="Description"
-                  value={newArticle.description}
-                  onChange={(e) => setNewArticle({ ...newArticle, description: e.target.value })}
-                />
-              </div>
-
-              <button type="submit" disabled={adding} className="btn btn-primary mt-4 disabled:opacity-50">
-                {adding ? 'Création...' : 'Créer'}
-              </button>
-            </form>
-          )}
-        </section>
-      )}
 
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
         {articles.map((article) => (

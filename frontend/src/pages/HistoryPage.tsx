@@ -73,8 +73,7 @@ export function HistoryPage() {
   if (typologies.length === 0) {
     return (
       <div className="mx-auto max-w-[1100px] px-4 sm:px-6 lg:px-8 py-6 pb-10">
-        <h1 className="text-3xl font-bold text-heading mb-2">Histoire &amp; Légendes</h1>
-        <p className="text-muted mb-6">Découvrez les récits et traditions qui façonnent la Provence.</p>
+        <h1 className="text-3xl font-bold text-heading mb-6">Histoire &amp; Légendes</h1>
         <div className="card text-center py-8">
           <p className="text-muted">Aucune histoire disponible pour le moment.</p>
         </div>
@@ -92,8 +91,7 @@ export function HistoryPage() {
 
   return (
     <div className="mx-auto max-w-[1100px] px-4 sm:px-6 lg:px-8 py-6 pb-10">
-      <h1 className="text-3xl font-bold text-heading mb-2">Histoire &amp; Légendes de Provence</h1>
-      <p className="text-muted mb-6">Deux lectures, un même territoire : récits historiques et traditions légendaires.</p>
+      <h1 className="text-3xl font-bold text-heading mb-6">Histoire &amp; Légendes de Provence</h1>
 
       <div className="hl-grid">
         <section className="card hl-panel">
@@ -103,7 +101,6 @@ export function HistoryPage() {
             </h2>
             <span className="badge badge-primary">{histoiresEntries.length} entrées</span>
           </div>
-          <p className="hl-panel-subtitle text-muted">Repères, personnages et événements marquants.</p>
 
           {histoiresPeriodes.length === 0 ? (
             <div className="card text-center py-8">
@@ -146,7 +143,6 @@ export function HistoryPage() {
             </h2>
             <span className="badge badge-terra">{legendesEntries.length} entrées</span>
           </div>
-          <p className="hl-panel-subtitle text-muted">Traditions orales, croyances et récits populaires.</p>
 
           {legendesPeriodes.length === 0 ? (
             <div className="card text-center py-8">
