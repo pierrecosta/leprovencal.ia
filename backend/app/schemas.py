@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import Optional
+from datetime import date
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -44,6 +45,7 @@ class ArticleCreate(APIModel):
     description: Optional[str] = None
     image_url: Optional[str] = None
     source_url: Optional[str] = None
+    date_ajout: Optional[date] = None
 
 
 class ArticleUpdate(APIModel):
@@ -59,6 +61,7 @@ class ArticleOut(APIModel):
     description: Optional[str] = None
     image_url: Optional[str] = None
     source_url: Optional[str] = None
+    date_ajout: date
     image_stored: bool = False
 
 

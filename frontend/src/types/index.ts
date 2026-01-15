@@ -23,6 +23,7 @@ export interface Article {
   description: string;
   imageUrl: string;
   sourceUrl: string;
+  dateAjout: string;
   imageStored: boolean;
   createdAt?: string;
   updatedAt?: string;

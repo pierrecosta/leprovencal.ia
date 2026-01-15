@@ -30,6 +30,7 @@ export function normalizeArticleOut(a: any): Article {
     description: a.description ?? '',
     imageUrl: a.imageUrl ?? a.image_url ?? a.src ?? '',
     sourceUrl: a.sourceUrl ?? a.source_url ?? '',
+    dateAjout: a.dateAjout ?? a.date_ajout ?? '',
     imageStored: a.imageStored ?? a.image_stored ?? false,
     createdAt: a.createdAt ?? a.created_at,
     updatedAt: a.updatedAt ?? a.updated_at,

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import date
 from sqlalchemy.orm import Session
 
 from app.crud import articles as articles_crud
@@ -25,6 +26,10 @@ def create_article_service(db: Session, *, article_in: ArticleCreate) -> Article
     if not titre:
         raise ValidationError("Le champ 'titre' est requis")
     payload["titre"] = titre
+    
+    # Set date_ajout to today if not provided
+    if "date_ajout" not in payload or payload["date_ajout"] is None:
+        payload["date_ajout"] = date.today()
 
     obj = articles_crud.create_article(db, payload=payload)
     db.commit()
@@ -43,6 +48,9 @@ def update_article_service(db: Session, *, article_id: int, article_in: ArticleU
         if not titre:
             raise ValidationError("Le champ 'titre' est requis")
         payload["titre"] = titre
+    
+    # Update date_ajout to today when modifying
+    payload["date_ajout"] = date.today()
 
     articles_crud.update_article(obj, payload=payload)
     db.commit()

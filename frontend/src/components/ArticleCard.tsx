@@ -1,4 +1,4 @@
-import { useMemo, useState, ChangeEvent } from 'react';
+import { useMemo, useState, useEffect, ChangeEvent } from 'react';
 import type { Article } from '@/types';
 import { useAuth } from '@/hooks/useAuth';
 import { ApiAlert } from './ApiAlert';
@@ -52,6 +52,21 @@ export function ArticleCard({ article, onUpdated, onDeleted }: ArticleCardProps)
   const [imageRev, setImageRev] = useState(0);
 
   const [deleting, setDeleting] = useState(false);
+
+  // Sync view state when article prop changes (e.g., after update)
+  useEffect(() => {
+    const updated: FormData = {
+      titre: article.titre,
+      description: article.description,
+      imageUrl: article.imageUrl,
+      sourceUrl: article.sourceUrl,
+      imageStored: article.imageStored,
+    };
+    setView(updated);
+    if (!isEditing) {
+      setForm(updated);
+    }
+  }, [article, isEditing]);
 
   const hasChanges = useMemo(() => {
     return (
@@ -257,16 +272,23 @@ export function ArticleCard({ article, onUpdated, onDeleted }: ArticleCardProps)
             <>
               <h3 className="text-2xl font-bold text-heading mb-2">{view.titre}</h3>
               <p className="text-text mb-4">{view.description}</p>
-              {view.sourceUrl && (
-                <a
-                  href={view.sourceUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-link hover:text-linkHover underline"
-                >
-                  Voir la source →
-                </a>
-              )}
+              <div className="flex items-center justify-between gap-4">
+                {view.sourceUrl && (
+                  <a
+                    href={view.sourceUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-link hover:text-linkHover underline"
+                  >
+                    Voir la source →
+                  </a>
+                )}
+                {article.dateAjout && (
+                  <span className="text-sm text-muted italic ml-auto">
+                    Ajouté le {new Date(article.dateAjout).toLocaleDateString('fr-FR')}
+                  </span>
+                )}
+              </div>
             </>
           ) : (
             <div className="space-y-4">

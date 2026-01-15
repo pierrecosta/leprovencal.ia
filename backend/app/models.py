@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text, LargeBinary
+from sqlalchemy import Column, Integer, String, Text, LargeBinary, Date
 from app.database import Base
 
 class User(Base):
@@ -14,6 +14,7 @@ class Article(Base):
     description = Column(Text, nullable=True)
     image_url = Column(String(200), nullable=True)
     source_url = Column(String(200), nullable=True)
+    date_ajout = Column(Date, nullable=False)
     # Optional stored image (<=2MB enforced at API layer)
     image_data = Column(LargeBinary, nullable=True)
     image_mime = Column(String(100), nullable=True)
