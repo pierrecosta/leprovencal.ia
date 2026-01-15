@@ -28,7 +28,7 @@ def list_mots_service(
     limit: int,
     sort: str,
     order: str,
-) -> list[Dictionnaire]:
+) -> dict:
     sort_col = _SORTABLE_FIELDS.get(sort)
     if not sort_col:
         raise ValidationError(f"Champ de tri invalide: {sort}")

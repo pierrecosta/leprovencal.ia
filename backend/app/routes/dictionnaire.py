@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 
 from app.database import get_db
-from app.schemas import DictionnaireCreate, DictionnaireUpdate, DictionnaireOut
+from app.schemas import DictionnaireCreate, DictionnaireUpdate, DictionnaireOut, PaginatedDictionnaire
 from app.utils.security import require_authenticated
 from app.services import dictionnaire as dict_service
 from app.services.errors import NotFoundError, ValidationError
@@ -14,7 +14,7 @@ from app.utils.db_errors import format_db_exception
 router = APIRouter()
 
 # 🔎 Liste paginée avec filtres + tri
-@router.get("/", response_model=List[DictionnaireOut])
+@router.get("/", response_model=PaginatedDictionnaire)
 def get_dictionnaire(
     theme: Optional[str] = Query(None),
     categorie: Optional[str] = Query(None),

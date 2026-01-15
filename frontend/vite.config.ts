@@ -10,14 +10,7 @@ export default defineConfig({
     },
   },
   server: {
-    port: 5173, // Vite default port
-    proxy: {
-      '/api': {
-        target: 'http://localhost:8000',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, ''),
-      },
-    },
+    port: 5173,
   },
   build: {
     outDir: 'build',

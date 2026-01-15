@@ -17,7 +17,7 @@ def list_mots(
     limit: int,
     sort_col: ColumnElement,
     desc_order: bool,
-) -> list[Dictionnaire]:
+) -> dict:
     query = db.query(Dictionnaire)
 
     if theme and theme.lower() != "tous":
@@ -30,7 +30,18 @@ def list_mots(
         query = query.filter(Dictionnaire.mots_francais.ilike(f"%{search}%"))
 
     query = query.order_by(sort_col.desc() if desc_order else sort_col.asc())
-    return query.offset((page - 1) * limit).limit(limit).all()
+    
+    total = query.count()
+    items = query.offset((page - 1) * limit).limit(limit).all()
+    pages = (total + limit - 1) // limit if limit > 0 else 0
+    
+    return {
+        "items": items,
+        "total": total,
+        "pages": pages,
+        "page": page,
+        "limit": limit,
+    }
 
 
 def list_themes(db: Session) -> list[str]:

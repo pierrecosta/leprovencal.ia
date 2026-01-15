@@ -105,8 +105,8 @@ body {
     sans-serif;
   background: var(--bg);
   color: var(--text);
-  font-size: 18px;
-  line-height: 1.7;
+  font-size: 16px;
+  line-height: 1.6;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -223,24 +223,27 @@ p, li {
 .footer {
   background: var(--primary);
   color: var(--primary-contrast);
-  padding: 2rem 1rem;
+  padding: 1.5rem 1rem;
   text-align: center;
   margin-top: 4rem;
+  box-shadow: var(--shadow-md);
 }
 
 .footer-inner {
-  max-width: var(--container-max);
+  max-width: calc(var(--container-max) + 2 * var(--container-padding));
   margin: 0 auto;
 }
 
 .footer-text {
   margin: 0 0 0.5rem 0;
+  font-size: 0.95rem;
 }
 
 .footer-tagline {
   margin: 0;
   font-style: italic;
   opacity: 0.9;
+  font-size: 0.9rem;
 }
 
 /* =====================================================================

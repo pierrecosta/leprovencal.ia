@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import type { MenuHistoires } from '@/types';
 import { getMenuHistoires } from '@/services/api';
 import { Loader } from '@/components/Loader';
@@ -61,8 +62,15 @@ export function HistoryPage() {
                     <ul className="space-y-2">
                       {items.map((item) => (
                         <li key={item.id} className="border-l-2 border-primary pl-4">
-                          <h4 className="font-semibold text-heading">{item.titre}</h4>
-                          <p className="text-sm text-muted">{item.descriptionCourte}</p>
+                          <Link
+                            to={`/histoire-legendes/${item.id}`}
+                            className="block hover:bg-slate-50 -ml-4 pl-4 py-2 rounded transition-colors"
+                          >
+                            <h4 className="font-semibold text-heading hover:text-primary transition-colors">
+                              {item.titre}
+                            </h4>
+                            <p className="text-sm text-muted">{item.descriptionCourte}</p>
+                          </Link>
                         </li>
                       ))}
                     </ul>

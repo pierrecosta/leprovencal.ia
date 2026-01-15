@@ -204,10 +204,10 @@ export async function getDictionary(filters: DictionaryFilters = {}): Promise<Pa
   if (filters.sort) params.sort = filters.sort;
   if (filters.order) params.order = filters.order;
   
-  const { data } = await http.get<PaginatedResponse<Mot>>('/dictionnaire', { params });
+  const { data } = await http.get<{ items: Mot[]; total: number; pages: number; page: number; limit: number }>('/dictionnaire', { params });
   
   return {
-    data: Array.isArray(data.data) ? data.data.map(normalizeMotOut) : [],
+    data: Array.isArray(data.items) ? data.items.map(normalizeMotOut) : [],
     page: data.page || 1,
     pages: data.pages || 1,
     total: data.total || 0,

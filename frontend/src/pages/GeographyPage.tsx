@@ -29,6 +29,7 @@ export function GeographyPage() {
   return (
     <div className="p-6">
       <h1 className="text-3xl font-bold text-heading mb-6">Géographie de la Provence</h1>
+      <p className="text-muted mb-6">Découvrez les cartes interactives et les lieux emblématiques de la Provence</p>
 
       {cartes.length === 0 ? (
         <div className="card text-center py-8">

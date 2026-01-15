@@ -155,3 +155,14 @@ class CarteUpdate(APIModel):
 class CarteOut(CarteCreate):
     id: int
     image_stored: bool = False
+
+
+# ==========================
+# Pagination Response
+# ==========================
+class PaginatedDictionnaire(APIModel):
+    items: list[DictionnaireOut]
+    total: int
+    pages: int
+    page: int
+    limit: int
