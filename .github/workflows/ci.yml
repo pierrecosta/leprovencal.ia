@@ -38,6 +38,10 @@ jobs:
         run: |
           cd frontend-vite
           npm ci
+      - name: Type check
+        run: |
+          cd frontend-vite
+          npm run type-check
       - name: Lint
         run: |
           cd frontend-vite

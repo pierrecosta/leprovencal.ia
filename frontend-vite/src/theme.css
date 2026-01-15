@@ -1,0 +1,333 @@
+/* =====================================================================
+   theme.css — Palette Provence + Tokens UI + Styles globaux
+   ===================================================================== */
+
+/* -----------------------------
+   Palette & Tokens (:root)
+   ----------------------------- */
+:root {
+  /* Palette principale — vert sauge / olive (cohérente, sobre) */
+  --sage-600: #71805a;
+  --sage-700: #5c6b45;
+  --olive-600: #6a7b33;
+  --olive-700: #54662f;
+
+  /* Neutres */
+  --slate-900: #0f172a;
+  --slate-700: #334155;
+  --slate-600: #475569;
+  --slate-300: #cbd5e1;
+  --slate-200: #e2e8f0;
+  --slate-100: #f1f5f9;
+  --slate-50: #f8fafc;
+
+  /* Accents */
+  --terra-600: #a6523b;
+  --danger-600: #b42318;
+
+  /* Alias variables (API stable) */
+  --color-sage: var(--sage-600);
+  --color-olive: var(--olive-700);
+  --color-sand: var(--slate-50);
+  --color-lavender: var(--sage-700);
+  --color-plum: var(--slate-900);
+  --color-terra: var(--terra-600);
+
+  /* Compatibilité */
+  --provence-sage: var(--sage-600);
+  --provence-olive: var(--olive-700);
+  --provence-sand: var(--slate-50);
+  --provence-lavender: var(--sage-700);
+  --provence-plum: var(--slate-900);
+  --provence-terra: var(--terra-600);
+
+  /* Surfaces */
+  --glass-bg: rgba(255, 255, 255, 0.82);
+  --glass-border: rgba(203, 213, 225, 0.6);
+  --glass-blur: blur(6px);
+
+  /* Tokens UI */
+  --bg: linear-gradient(to bottom, var(--slate-50) 0%, var(--slate-100) 100%);
+  --surface: rgba(255, 255, 255, 0.95);
+  --surface-contrast: rgba(255, 255, 255, 1);
+  --text: var(--slate-900);
+  --text-muted: var(--slate-600);
+  --heading: var(--slate-900);
+  --link: var(--olive-700);
+  --link-hover: var(--sage-700);
+  --border: var(--slate-200);
+
+  /* Interactions & effets */
+  --primary: var(--sage-700);
+  --primary-contrast: #ffffff;
+  --secondary: var(--olive-700);
+  --accent: var(--olive-600);
+  --danger: var(--danger-600);
+  --focus-ring-color: rgba(107, 127, 46, 0.25);
+  --focus-ring: 0 0 0 3px var(--focus-ring-color);
+
+  /* Ombres modernes */
+  --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.08), 0 1px 2px rgba(15, 23, 42, 0.06);
+  --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.1), 0 2px 4px -1px rgba(15, 23, 42, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(15, 23, 42, 0.1), 0 4px 6px -2px rgba(15, 23, 42, 0.05);
+
+  --radius: 16px;
+  --radius-sm: 8px;
+  --radius-lg: 24px;
+
+  /* Layout */
+  --container-max: 1100px;
+  --container-padding: 1rem;
+}
+
+/* =====================================================================
+   Reset & Base
+   ===================================================================== */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+html, body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', 'Roboto',
+    'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 18px;
+  line-height: 1.7;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::selection {
+  background: rgba(92, 107, 69, 0.2);
+  color: var(--slate-900);
+}
+
+a {
+  color: var(--link);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+a:hover {
+  color: var(--link-hover);
+  text-decoration: underline;
+}
+
+:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+  border-radius: 8px;
+}
+
+/* =====================================================================
+   Typographie
+   ===================================================================== */
+h1, h2, h3, h4, h5, h6 {
+  color: var(--heading);
+  font-weight: 800;
+  line-height: 1.2;
+  margin: 0 0 0.6em 0;
+}
+
+h1 { font-size: clamp(2rem, 1.8rem + 1.2vw, 3rem); }
+h2 { font-size: clamp(1.6rem, 1.4rem + 0.8vw, 2.2rem); }
+h3 { font-size: clamp(1.3rem, 1.2rem + 0.6vw, 1.6rem); }
+
+p, li {
+  color: var(--slate-700);
+}
+
+/* =====================================================================
+   Navigation
+   ===================================================================== */
+.navbar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: var(--primary);
+  color: var(--primary-contrast);
+  box-shadow: var(--shadow-md);
+}
+
+.navbar-inner {
+  max-width: calc(var(--container-max) + 2 * var(--container-padding));
+  margin: 0 auto;
+  padding: 0.9rem 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.nav-brand {
+  font-weight: 900;
+  color: var(--primary-contrast);
+  font-size: clamp(1.8rem, 1.4rem + 1.2vw, 2.6rem);
+  line-height: 1.1;
+}
+
+.nav-links {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.nav-menu {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: .4rem;
+}
+
+.nav-auth {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.nav-link {
+  color: var(--primary-contrast);
+  padding: .5rem .75rem;
+  border-radius: 10px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.nav-link-auth {
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.nav-link:hover {
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+}
+
+/* =====================================================================
+   Footer
+   ===================================================================== */
+.footer {
+  background: var(--primary);
+  color: var(--primary-contrast);
+  padding: 2rem 1rem;
+  text-align: center;
+  margin-top: 4rem;
+}
+
+.footer-inner {
+  max-width: var(--container-max);
+  margin: 0 auto;
+}
+
+.footer-text {
+  margin: 0 0 0.5rem 0;
+}
+
+.footer-tagline {
+  margin: 0;
+  font-style: italic;
+  opacity: 0.9;
+}
+
+/* =====================================================================
+   Cartes & Boutons
+   ===================================================================== */
+.card {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  padding: 1.5rem;
+}
+
+.card:hover {
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--slate-200);
+}
+
+button, .btn {
+  font-size: 16px;
+  padding: 10px 16px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  transition: all 0.15s ease;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: var(--primary-contrast);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-primary:hover {
+  opacity: 0.95;
+}
+
+.btn-secondary {
+  background: #fff;
+  color: var(--primary);
+  border-color: var(--slate-300);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-secondary:hover {
+  background: var(--slate-50);
+  border-color: var(--primary);
+}
+
+/* =====================================================================
+   Formulaires
+   ===================================================================== */
+.input, input[type="text"], input[type="email"], input[type="password"], 
+input[type="url"], input[type="file"], textarea, select {
+  width: 100%;
+  padding: .7rem .85rem;
+  border-radius: 12px;
+  border: 2px solid var(--border);
+  background: #fff;
+  color: var(--text);
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  box-shadow: var(--shadow-sm);
+}
+
+.input:focus, input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: var(--focus-ring), var(--shadow-md);
+}
+
+/* =====================================================================
+   Responsive
+   ===================================================================== */
+@media (max-width: 768px) {
+  .navbar-inner {
+    padding: 0.5rem .75rem;
+  }
+  .nav-links {
+    gap: .25rem;
+  }
+  .card {
+    padding: 1rem;
+  }
+}
