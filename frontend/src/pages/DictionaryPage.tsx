@@ -15,6 +15,8 @@ export function DictionaryPage() {
   const [sort, setSort] = useState('mots_francais');
   const [order, setOrder] = useState<'asc' | 'desc'>('asc');
 
+  const [limit, setLimit] = useState(25);
+
   const { page, pages, setPage, setPages } = usePagination(1, 1);
 
   const { mots, themes, categories, pages: totalPages, loading } = useDictionary({
@@ -23,6 +25,7 @@ export function DictionaryPage() {
     lettre,
     search,
     page,
+    limit,
     sort,
     order,
   });
@@ -79,7 +82,16 @@ export function DictionaryPage() {
         <DictionaryTable mots={mots} sort={sort} order={order} onSort={handleSort} />
       )}
 
-      <Pagination page={page} pages={pages} onPageChange={setPage} />
+      <Pagination
+        page={page}
+        pages={pages}
+        onPageChange={setPage}
+        limit={limit}
+        onLimitChange={(next) => {
+          setLimit(next);
+          setPage(1);
+        }}
+      />
     </div>
   );
 }

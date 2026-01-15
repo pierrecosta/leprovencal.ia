@@ -20,6 +20,8 @@ export function HomePage() {
   const [adding, setAdding] = useState(false);
   const [creating, setCreating] = useState(false);
 
+  const [limit, setLimit] = useState(25);
+
   const { page, pages, setPage, setPages } = usePagination(1, 1);
   const [hasNext, setHasNext] = useState(false);
 
@@ -28,12 +30,12 @@ export function HomePage() {
       setLoading(true);
       try {
         // Request limit+1 to detect next page
-        const res = await getArticlesPaged({ page, limit: 6 });
+        const res = await getArticlesPaged({ page, limit: limit + 1 });
         const items = res.data;
-        setHasNext(items.length > 5);
-        setArticles(items.slice(0, 5));
+        setHasNext(items.length > limit);
+        setArticles(items.slice(0, limit));
         // Update pages: if hasNext, we know there's at least page+1
-        setPages(items.length > 5 ? page + 1 : page);
+        setPages(items.length > limit ? page + 1 : page);
       } catch (err) {
         setError('Impossible de charger les articles.');
       } finally {
@@ -41,7 +43,7 @@ export function HomePage() {
       }
     }
     fetchArticles();
-  }, [page, setPages]);
+  }, [page, limit, setPages]);
 
   const handleCreateArticle = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -71,7 +73,7 @@ export function HomePage() {
   if (error && articles.length === 0) return <p className="text-red-600 text-center">{error}</p>;
 
   return (
-    <div className="mx-auto max-w-[1100px] px-4 py-6">
+    <div className="mx-auto max-w-[1100px] px-4 sm:px-6 lg:px-8 py-6 pb-10">
       <header className="mb-6">
         <h1 className="text-3xl font-bold text-heading">Culture Provençale</h1>
         <p className="text-muted mt-1">Articles, découvertes et repères autour de la Provence.</p>
@@ -137,7 +139,7 @@ export function HomePage() {
         </section>
       )}
 
-      <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <section className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
         {articles.map((article) => (
           <ArticleCard
             key={article.id}
@@ -153,7 +155,18 @@ export function HomePage() {
       </section>
 
       {/* Pagination */}
-      <Pagination page={page} pages={pages} onPageChange={setPage} />
+      <div className="mt-6">
+        <Pagination
+          page={page}
+          pages={pages}
+          onPageChange={setPage}
+          limit={limit}
+          onLimitChange={(next) => {
+            setLimit(next);
+            setPage(1);
+          }}
+        />
+      </div>
     </div>
   );
 }

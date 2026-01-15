@@ -8,6 +8,7 @@ interface UseDictionaryParams {
   lettre: string;
   search: string;
   page: number;
+  limit: number;
   sort: string;
   order: 'asc' | 'desc';
 }
@@ -26,6 +27,7 @@ export function useDictionary({
   lettre,
   search,
   page,
+  limit,
   sort,
   order,
 }: UseDictionaryParams): UseDictionaryReturn {
@@ -52,7 +54,7 @@ export function useDictionary({
   // Load mots
   useEffect(() => {
     setLoading(true);
-    getDictionary({ theme, categorie, lettre, search, page, limit: 20, sort, order })
+    getDictionary({ theme, categorie, lettre, search, page, limit, sort, order })
       .then((res) => {
         setMots(res.data);
         setPages(res.pages);
@@ -62,7 +64,7 @@ export function useDictionary({
         setPages(1);
       })
       .finally(() => setLoading(false));
-  }, [theme, categorie, lettre, search, page, sort, order]);
+  }, [theme, categorie, lettre, search, page, limit, sort, order]);
 
   return { mots, themes, categories, pages, loading };
 }

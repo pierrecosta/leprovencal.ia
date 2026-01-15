@@ -266,6 +266,7 @@ p, li {
 .article-card {
   position: relative;
   overflow: hidden;
+  padding-left: calc(1.5rem + 0.35rem);
 }
 
 .article-card::before {
@@ -307,7 +308,7 @@ p, li {
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: 1rem;
+  gap: 1.25rem;
 }
 
 .article-side {
@@ -317,6 +318,7 @@ p, li {
 .article-body {
   flex: 1 1 0%;
   min-width: 0;
+  padding-top: 0.15rem;
 }
 
 .card:hover {
@@ -399,6 +401,132 @@ input[type="url"], input[type="file"], textarea, select {
 .badge-secondary {
   background: var(--slate-300);
   color: var(--slate-700);
+}
+
+.badge-terra {
+  background: var(--terra-600);
+  color: #fff;
+}
+
+/* =====================================================================
+   Histoire & Légendes
+   ===================================================================== */
+.hl-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+}
+
+@media (min-width: 1024px) {
+  .hl-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+  }
+}
+
+.hl-panel {
+  padding: 1.25rem;
+}
+
+.hl-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.hl-panel-title {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin: 0;
+}
+
+.hl-panel-subtitle {
+  margin: 0 0 0.75rem 0;
+}
+
+.hl-accordion {
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.7);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.hl-accordion + .hl-accordion {
+  margin-top: 0.75rem;
+}
+
+.hl-accordion summary {
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+  padding: 0.85rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.hl-accordion summary::-webkit-details-marker {
+  display: none;
+}
+
+.hl-accordion-title {
+  font-weight: 800;
+  color: var(--heading);
+}
+
+.hl-accordion-count {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.hl-accordion-body {
+  padding: 0 1rem 1rem 1rem;
+}
+
+.hl-item {
+  display: block;
+  padding: 0.9rem 1rem;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease;
+}
+
+.hl-item:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+  border-color: rgba(113, 128, 90, 0.35);
+}
+
+.hl-item + .hl-item {
+  margin-top: 0.75rem;
+}
+
+.hl-item-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.35rem;
+}
+
+.hl-item-title {
+  margin: 0;
+  font-weight: 900;
+  color: var(--heading);
+}
+
+.hl-item-desc {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  line-height: 1.5;
 }
 
 /* =====================================================================
