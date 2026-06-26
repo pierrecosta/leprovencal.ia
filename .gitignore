@@ -1,27 +1,25 @@
 # ---- Backend Python ----
-# Environnements virtuels
 backend/venv/
 backend/.env
 *.env
 
 # --- Caches Python ---
 __pycache__/
+*.pyc
 
-# Logs et caches
+# Logs and caches
 *.log
 
 # ---- Frontend Node ----
-# Frontend principal (Vite + TypeScript)
 frontend/node_modules/
 frontend/dist/
 frontend/build/
 
-# Frontend legacy (deprecated)
-frontend-old/node_modules/
-frontend-old/build/
-
 # ---- IDE / OS ----
 .vscode/
+.idea/
+.DS_Store
 
-# MyReadme
+# ---- Local files ----
 README-local.md
+*.db
