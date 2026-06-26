@@ -1,21 +1,21 @@
 """
 Module: security.py
 Description: Gestion de la sécurité (hashage des mots de passe, génération et validation des tokens JWT)
-Stack: FastAPI + Passlib + PyJWT (via jose)
+Stack: FastAPI + bcrypt + PyJWT
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional, Dict
 import os
 
-from jose import JWTError, jwt
-from jose.exceptions import ExpiredSignatureError
-from passlib.context import CryptContext
+import jwt
+import bcrypt
 from fastapi import Depends, status, Request
 from fastapi.security import OAuth2PasswordBearer
 from app.utils.http_errors import http_error
 
 from app.config import settings as _settings
+
 
 def _is_production(env: str) -> bool:
     return env.lower() in {"prod", "production"}
@@ -35,11 +35,6 @@ ACCESS_TOKEN_EXPIRE_MINUTES: int = int(
 )
 
 # ==========================
-# Context pour hashage
-# ==========================
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
-# ==========================
 # OAuth2
 # ==========================
 # NOTE: auto_error=False pour permettre un usage "optionnel" sur routes publiques.
@@ -47,31 +42,40 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login", auto_error=False)
 
 
 # ==========================
-# Fonctions de hashage
+# Fonctions de hashage (bcrypt direct)
 # ==========================
 def hash_password(password: str) -> str:
     """
     Hash un mot de passe avec bcrypt.
     """
-    return pwd_context.hash(password)
+    password_bytes = password.encode("utf-8")
+    salt = bcrypt.gensalt()
+    hashed = bcrypt.hashpw(password_bytes, salt)
+    return hashed.decode("utf-8")
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """
     Vérifie si le mot de passe en clair correspond au hash.
     """
-    return pwd_context.verify(plain_password, hashed_password)
+    try:
+        return bcrypt.checkpw(
+            plain_password.encode("utf-8"),
+            hashed_password.encode("utf-8"),
+        )
+    except (ValueError, TypeError):
+        return False
 
 
 # ==========================
-# JWT : création et validation
+# JWT : création et validation (PyJWT)
 # ==========================
 def create_access_token(data: Dict[str, str], expires_delta: Optional[timedelta] = None) -> str:
     """
     Crée un token JWT avec une date d'expiration.
     """
     to_encode = data.copy()
-    expire = datetime.utcnow() + (expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
+    expire = datetime.now(timezone.utc) + (expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
@@ -82,7 +86,7 @@ def decode_access_token(token: str) -> Optional[Dict[str, str]]:
     """
     try:
         return jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-    except (ExpiredSignatureError, JWTError):
+    except (jwt.ExpiredSignatureError, jwt.InvalidTokenError):
         return None
 
 
